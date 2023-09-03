@@ -1,0 +1,7 @@
+1. Familiar with Python and Matlab Syntax
+2. Find the MATLAB function needed to convert
+3. Use the py libraries to replace the MATLAB function
+4. Convert the MATLAB code to py code.
+	Note the array order in MATLAB is beginning at 1 
+5. Test and Debug
+6. Refine and Optimize py code (later)
