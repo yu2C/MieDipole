@@ -1,0 +1,20 @@
+New mothed beyond PC-RET
+
+TCD (transition current density):
+    spatial dependent --> more than one points(dipole appr.) to calculate
+    How to use in computational chemistry?
+    can separate by HOMO and LUMO by Condon-like appr.
+
+Rate eqn
+Absorption (emission) spectrum and electromagnetic coupling factor
+    Spectrum can get by the exp.
+    Need coupling factor
+
+
+Need coupling factor
+    transition current density
+    Green's function
+
+Further 
+   Dexter ET
+   quantum dynamics (limitation of Fermi's Golden rule

@@ -18,4 +18,4 @@ def appendSpherical_np(xyz):
 
 result = appendSpherical_np(xyz)
 
-print(result / math.pi)
+print(result)
