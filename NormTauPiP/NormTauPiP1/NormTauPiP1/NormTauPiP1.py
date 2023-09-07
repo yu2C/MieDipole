@@ -15,26 +15,42 @@ def Wigner_d(j, theta):
     d = V @ np.diag(np.exp(-1j * theta *D)) @ V.conj().T
     
     # Check the Quality of the Transformation
-    #np.max() will just output a number instead of column or row vector
+    # np.max() will just output a number instead of column or row vector
     if np.max(np.abs(np.imag(d))) > 1e-12:
         warn_mes = 'Wigner_d may not give reliable results.'
         print(warn_mes)
     
     # Change Data Type (complex -> real)
-    dd= np.real(d)
+    dd = np.real(d)
     
     return dd
 
+#print(Wigner_d(1,0))
+#print('==========================')
+
+
 
 def NormTauPiP(nmax, theta, order):
+    #parameter
+    nmax = 2
+    theta = 1
+    order = 'reversed'
     # Preallocation
-    NTau = np.zeros((nmax, 2 * nmax + 1))
-    NPi = np.zeros((nmax, 2 * nmax + 1))
-    NP = np.zeros((nmax, 2 * nmax + 1))
+    NTau = np.zeros((nmax, 2 * nmax + 1))#, #dtype=complex)
+    NPi = np.zeros((nmax, 2 * nmax + 1))#, #dtype=complex)
+    NP = np.zeros((nmax, 2 * nmax + 1))#, #dtype=complex)
+
+    #print(NTau)
+    #print(NPi)
+    #print(NP)
+    #print('==========================')
     
     for indn in range(1, nmax + 1):
         # Calling Wigner d Matrix of Order n
         dn = Wigner_d(indn, theta)
+        print(dn)
+        print('==========================')
+
         
         # Setting the Order
         if order == 'normal':
@@ -44,6 +60,16 @@ def NormTauPiP(nmax, theta, order):
             dn01 = dn[:, indn ]
             # d_(m,-1)^n
             dnn1 = dn[:, indn - 1]
+
+            print('This is dnp1')
+            print(dnp1)
+            print('==========================')
+            print('This is dn01')
+            print(dn01)
+            print('==========================')
+            print('This is dnn1')
+            print(dnn1)
+            print('==========================')
         elif order == 'reversed':
             # d_(m,+1)^n
             dnp1 = np.flip(dn[:, indn + 1])
@@ -51,7 +77,17 @@ def NormTauPiP(nmax, theta, order):
             dn01 = np.flip(dn[:, indn ])
             # d_(m,-1)^n
             dnn1 = np.flip(dn[:, indn - 1])
-        
+
+            print('This is dnp1')
+            print(dnp1)
+            print('==========================')
+            print('This is dn01')
+            print(dn01)
+            print('==========================')
+            print('This is dnn1')
+            print(dnn1)
+            print('==========================')
+                    
         # Normalization Constants
         NormTauPi = np.sqrt((2 * indn + 1) / 8)
         NormP = np.sqrt((2 * indn + 1) / (2 * indn * (indn + 1)))
@@ -72,3 +108,6 @@ def NormTauPiP(nmax, theta, order):
     return NAng
 
 print(NormTauPiP(2, 1, 'reversed'))
+
+
+

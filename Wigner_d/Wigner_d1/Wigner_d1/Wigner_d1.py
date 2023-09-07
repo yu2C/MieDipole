@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.linalg import eig
 
-j = 1.5
+j = 1
 theta = 0
 
 #def Wigner_d(j, theta):
@@ -66,7 +66,7 @@ if np.max(np.abs(np.imag(d))) > 1e-12:
         print(warn_mes)
     
     # Change Data Type (double complex -> double real)
-dd = np.diag(np.real(d))
+dd = np.real(d)
 print('This is dd')
 print(dd)
 print('===============')
