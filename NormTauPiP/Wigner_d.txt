@@ -1,0 +1,8 @@
+Matrix in QM
+can improve the calculational precision of spherical functions,
+instead of using associated Legendre polynomial which has increasing error 
+when n is large. (How large?)
+
+
+Low order has analytical solution, can correct the output of lumerical code.
+Test the limitation of the code where the function will be abnormal. 
