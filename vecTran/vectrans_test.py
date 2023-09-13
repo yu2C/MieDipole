@@ -1,6 +1,7 @@
 # Coordinate Transformation for Vectors
 
 import numpy as np
+import C2S as C2S
 
 def VecTrans(vini, solidangle, type):
     # Solid Angle to Polar Angle and Azimuthal Angle
@@ -19,7 +20,7 @@ def VecTrans(vini, solidangle, type):
     else:
         cost = np.cos(theta)
         sint = np.sin(theta)
-    
+        
     # Calculating cos(phi) and sin(phi)
     if phi == 0:
         sinp = 0
@@ -31,11 +32,20 @@ def VecTrans(vini, solidangle, type):
         cosp = np.cos(phi)
         sinp = np.sin(phi)
     
+    print('This is theta, phi')
+    print(theta, phi)
+    
     # Transform Matrix
     T = np.array([[sint * cosp, cost * cosp, -sinp],
                   [sint * sinp, cost * sinp, cosp],
                   [cost, -sint, 0]
                   ])
+    
+    print('This is T')
+    print(np.array([[sint * cosp, cost * cosp, -sinp],
+                  [sint * sinp, cost * sinp, cosp],
+                  [cost, -sint, 0]
+                  ]))
     
     # Assigning the Type of Transformation
     if type == 'C2S':
@@ -50,6 +60,9 @@ vinicart = np.array([[1],
                      [0],
                      [0]
                      ])
-DPosSph = np.array([1., 1.57079633, 0.])
+#DPosSph = np.array([1., 1.57079633, 0.])
+DPosSph = C2S.C2S(vinicart)
+
+print(C2S.C2S(vinicart))
 
 print(VecTrans(vinicart, DPosSph[1:3], 'C2S'))

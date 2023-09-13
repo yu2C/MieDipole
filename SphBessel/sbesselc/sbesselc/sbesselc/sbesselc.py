@@ -62,12 +62,14 @@ def sbesselc(z, n):
     a0 = abs(z)
     nm = n
     
+    # If circle checked
     if a0 < 1e-60:
         csj = np.zeros(n + 1)
         csy = np.full(n + 1, -1e300)
         csy[0] = 1.0
         return csj, csy
     
+    # checked
     csj = np.zeros(n + 1)
     csj[0] = np.sin(z) / z
     csj[1] = (csj[0] - np.cos(z)) / z
@@ -76,7 +78,7 @@ def sbesselc(z, n):
         csa = csj[0]
         csb = csj[1]
         m = MSTA1(a0, 200)
-        
+
         if m < n:
             nm = m
         else:
@@ -90,7 +92,7 @@ def sbesselc(z, n):
             cf = (2.0 * k + 3.0) * cf1 / z - cf0
             
             if k <= nm:
-                csj[j] = cf
+                csj[j - 1] = cf
             
             cf0 = cf1
             cf1 = cf
@@ -102,19 +104,21 @@ def sbesselc(z, n):
         
         for k in range(min(nm, n) + 1):
             j = k + 1
-            csj[j] = cs * csj[j]
+            csj[j - 1] = cs * csj[j - 1]
     
     csy = np.full(n + 1, 1e200)
     csy[0] = -np.cos(z) / z
     csy[1] = (csy[0] - np.sin(z)) / z
     
+    # This is test j --> j - 1
     for k in range(2, min(nm, n) + 1):
         j = k + 1
         
-        if abs(csj[j - 1]) >= abs(csj[j - 2]):
-            csy[j] = (csj[j] * csy[j - 1] - 1.0 / z ** 2) / csj[j - 1]
+        if abs(csj[j - 2]) >= abs(csj[j - 3]):
+            csy[j - 1] = (csj[j - 1] * csy[j - 2] - 1.0 / z ** 2) / csj[j - 2]
         else:
-            csy[j] = (csj[j] * csy[j - 2] - (2.0 * k - 1.0) / z ** 3) / csj[j - 2]
+            csy[j - 1] = (csj[j - 1] * csy[j - 3] - (2.0 * k - 1.0) / z ** 3) / csj[j - 3]
     
     return csj, csy
 
+print(sbesselc(1, 2))

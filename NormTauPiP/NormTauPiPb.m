@@ -1,6 +1,6 @@
-nmax = 5;
-theta = 1.3;
-order = 'reversed';
+nmax = 1;
+theta = pi/4;
+order = 'normal';
 %indn;
 %NormTauPiP(nmax,theta,order);
 
