@@ -5,10 +5,11 @@
 # Called by sbesselc and rcbesselc
 
 # Determine the starting point M to calculate Bessel function by backward recurrence
-# Input  : z     --- Argument of Jn(x)
+# Input  : z     --- Argument of Jn(z)
 #          mp    --- Value of magnitude
 # Output : MSTA1 --- Starting point
 import numpy as np 
+import matplotlib.pyplot as plt
 
 def envj(n, z):
     n = max(1, abs(n))
@@ -38,3 +39,23 @@ def MSTA1(z, mp):
     return nn
 
 print(MSTA1(1, 200))
+# Define z values ranging from 1 to 10
+z_values = np.linspace(1, 10, 10)
+
+# Fixed mp value
+mp = 200
+
+# Calculate MSTA1(z, mp) values for each z
+MSTA1_values = [MSTA1(z, mp) for z in z_values]
+
+# Create the plot
+plt.plot(z_values, MSTA1_values)
+plt.xlabel('z')
+plt.ylabel('MSTA1(z, mp)')
+plt.title('MSTA1(z, mp) for mp=200')
+
+plt.xlim(1,10)
+plt.ylim(100,180)
+
+plt.grid(True)
+plt.show()

@@ -6,6 +6,7 @@
 # Substitite j = k + 1 with k in array-like
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 def MSTA1(z, mp):
     a0 = abs(z)
@@ -126,3 +127,32 @@ def sbesselc(z, n):
     return csj, csy
 
 print(sbesselc(1, 3))
+
+# Define z values ranging from 1 to 10
+z = np.linspace(1, 10, 100)
+
+# Values of n to plot
+n = 1
+
+# Create a figure and axis
+plt.figure()
+
+# Plot sbesselc(z, n) for each value of n
+
+csj, _ = sbesselc(z, n)
+plt.plot(z, csj, label=f'n={n}')
+
+# Add labels and legend
+plt.xlabel('z')
+plt.ylabel('sbesselc(z, n)')
+plt.title('sbesselc(z, n) for n = 1 to 3')
+plt.legend()
+
+# Show the plot
+plt.grid(True)
+plt.show()
+
+
+
+
+
