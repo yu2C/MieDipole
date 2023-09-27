@@ -1,0 +1,78 @@
+# Coordinate Transformation for Vectors
+
+import numpy as np
+#import C2S
+#import S2S
+#import Settings
+
+
+
+def VecTrans(vini, solidangle, type):
+    # Solid Angle to Polar Angle and Azimuthal Angle
+    (theta, phi) = (solidangle[0], solidangle[1])
+    
+    # Calculating cos(theta) and sin(theta)
+    if theta == 0:
+        sint = 0
+        cost = 1
+    elif theta == np.pi:
+        sint = 0
+        cost = -1
+    elif theta == np.pi/2 or theta == 3*np.pi/2:
+        cost = 0
+        sint = 1
+    else:
+        cost = np.cos(theta)
+        sint = np.sin(theta)
+    
+    # Calculating cos(phi) and sin(phi)
+    if phi == 0:
+        sinp = 0
+        cosp = 1
+    elif phi == np.pi/2:
+        cosp = 0
+        sinp = 1
+    else:
+        cosp = np.cos(phi)
+        sinp = np.sin(phi)
+    
+    # Transform Matrix
+    T = np.array([[sint * cosp, cost * cosp, -sinp],
+                  [sint * sinp, cost * sinp, cosp],
+                  [cost, -sint, 0]
+                  ])
+    #print(np.array([[sint * cosp, cost * cosp, -sinp],
+     #             [sint * sinp, cost * sinp, cosp],
+      #            [cost, -sint, 0]
+       #           ]))
+    # Assigning the Type of Transformation
+    if type == 'C2S':
+        T = np.transpose(T)
+    elif type != 'S2C':
+        print('Error from function "VecTrans"')
+    
+    #vfin = np.dot(T, vini)
+    vfin = T @ vini
+    return vfin
+
+'''
+vinicart = np.array([[1],
+                     [0],
+                     [0]
+                     ])
+print('This is C2S')
+print(C2S.C2S(np.array([[1],
+                    [0],
+                    [0]])))
+print('=================')
+
+DPosSph = np.array([1., np.pi / 2, 0.])
+'''
+#print(VecTrans(Settings.Settings['DOri']['Cart'], Settings.Settings["DPos"]["Sph"][1:3], 'C2S'))
+# print(DPosSph[1:3])
+# print(DPosSph[1:3][0], DPosSph[1:3][1], DPosSph[2])
+# print(np.array([[sint * cosp, cost * cosp, -sinp],
+                  #[sint * sinp, cost * sinp, cosp],
+                  #[cost, -sint, 0]
+                  #]))
+

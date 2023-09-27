@@ -124,28 +124,29 @@ def sbesselc(z, n):
     return csj, csy
 
 def rcbesselc(z, n):
-    rcj = np.zeros(n + 1)
-    rcy = np.zeros(n + 1)
-    drcj = np.zeros(n + 1)
-    drcy = np.zeros(n + 1)
-    NM = n
+    rcj  = np.zeros(n + 1, dtype=complex)
+    rcy  = np.zeros(n + 1, dtype=complex)
+    drcj = np.zeros(n + 1, dtype=complex)
+    drcy = np.zeros(n + 1, dtype=complex)
+    NM   = n
+    #NMy  = 0
     
-    if abs(z) < 1e-60:
+    if abs(z) < 1e-60: # Treat z = 0 as a special case
         print('ricatti-bessel function precision down')
-        drcj[0] = 1.0  # zeroth order
-        rcy = -1.0e300 * np.ones(n + 1)
-        drcy = 1.0e300 * np.ones(n + 1)
-        rcy[0] = -1.0
+        drcj[0] = 1.0 # zeroth order
+        rcy     = -1.0e300 * np.ones(n + 1)
+        drcy    = 1.0e300 * np.ones(n + 1)
+        rcy[0]  = -1.0
         drcy[0] = 0.0
     else:
         rcj[0] = np.sin(z)  # zeroth order
         rcy[0] = -np.cos(z)
         rcj[1] = rcj[0] / z - np.cos(z)  # first order
         rcy[1] = rcy[0] / z - np.sin(z)
-        rcj0 = rcj[0]
-        rcj1 = rcj[1]
-        RF0 = rcy[0]
-        RF1 = rcy[1]
+        rcj0   = rcj[0]
+        rcj1   = rcj[1]
+        RF0    = rcy[0]
+        RF1    = rcy[1]
         
         for Ky in range(3, n + 2):
             RF2 = (2.0 * (Ky - 1) - 1.0) * RF1 / z - RF0
@@ -157,7 +158,12 @@ def rcbesselc(z, n):
             RF0 = RF1
             RF1 = RF2
         
-        NMy = Ky - 1
+        NMy = Ky - 1  
+        #print(NMy)
+        
+        
+    
+    
         drcy[0] = np.sin(z)
         drcy[1] = -rcy[1] / z + rcy[0]
         
@@ -195,7 +201,7 @@ def rcbesselc(z, n):
         drcj[0] = np.cos(z)
         drcj[1] = -rcj[1] / z + rcj0
         
-        for K in range(3, NM + 2):
+        for K in range(3, NM + 2): # 3, NM + 2
             drcj[K - 1] = -(K - 1) * rcj[K - 1] / z + rcj[K - 2]
     
     return rcj, rcy, drcj, drcy
@@ -285,17 +291,4 @@ def SphBessel(kr, nmax, array, type):
     
     return Rad
 
-n = 2
 
-for z in range(0, n + 1):
-    print(SphBessel(z, 2, 1, 'hankel1'))
-
-# Create the plot
-plt.plot(z, SphBessel(z, 2, 1, 'hankel1'), marker='o', linestyle='-')
-plt.xlabel('kr')
-plt.ylabel('hankel1')
-plt.title('Plot of hankel1 vs. z')
-plt.grid(True)
-
-# Show the plot
-plt.show()

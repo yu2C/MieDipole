@@ -1,3 +1,17 @@
+## Riccati-Bessel Functions (Complex Argument)
+# Ref: Computation of Special Functions (1996)
+#        Authors: Shanjie Zhang, Jianming Jin
+#----------------------------------------------
+# Called by SphBessel
+# Compute Riccati-Bessel functions of the first and second kinds and their derivatives
+# Input  : z       --- complex argument of Riccati-Bessel Fucntion
+#          n       --- order of jn(z) (n = 0, 1, 2,...)
+# Output : rcj(n)  --- x * jn(z)
+#          drcj(n) --- (x * jn(z))'
+#          rcy(n)  --- x * yn(z)
+#          drcy(n) --- (x * yn(z))'
+#          
+
 import numpy as np
 
 def MSTA1(z, mp):
@@ -59,28 +73,28 @@ def envj(n, z):
     return result
 
 def rcbesselc(z, n):
-    rcj = np.zeros(n + 1)
-    rcy = np.zeros(n + 1)
-    drcj = np.zeros(n + 1)
-    drcy = np.zeros(n + 1)
-    NM = n
+    rcj  = np.zeros(n + 1, dtype=complex)
+    rcy  = np.zeros(n + 1, dtype=complex)
+    drcj = np.zeros(n + 1, dtype=complex)
+    drcy = np.zeros(n + 1, dtype=complex)
+    NM   = n
     
-    if abs(z) < 1e-60:
+    if abs(z) < 1e-60: # Treat z = 0 as a special case
         print('ricatti-bessel function precision down')
-        drcj[0] = 1.0  # zeroth order
-        rcy = -1.0e300 * np.ones(n + 1)
-        drcy = 1.0e300 * np.ones(n + 1)
-        rcy[0] = -1.0
+        drcj[0] = 1.0 # zeroth order
+        rcy     = -1.0e300 * np.ones(n + 1)
+        drcy    = 1.0e300 * np.ones(n + 1)
+        rcy[0]  = -1.0
         drcy[0] = 0.0
     else:
         rcj[0] = np.sin(z)  # zeroth order
         rcy[0] = -np.cos(z)
         rcj[1] = rcj[0] / z - np.cos(z)  # first order
         rcy[1] = rcy[0] / z - np.sin(z)
-        rcj0 = rcj[0]
-        rcj1 = rcj[1]
-        RF0 = rcy[0]
-        RF1 = rcy[1]
+        rcj0   = rcj[0]
+        rcj1   = rcj[1]
+        RF0    = rcy[0]
+        RF1    = rcy[1]
         
         for Ky in range(3, n + 2):
             RF2 = (2.0 * (Ky - 1) - 1.0) * RF1 / z - RF0
@@ -91,46 +105,51 @@ def rcbesselc(z, n):
             rcy[Ky - 1] = RF2
             RF0 = RF1
             RF1 = RF2
+            NMy = Ky - 1
         
-        NMy = Ky - 1
-        drcy[0] = np.sin(z)
-        drcy[1] = -rcy[1] / z + rcy[0]
         
-        for Ky in range(3, NMy + 2):
-            drcy[Ky - 1] = -(Ky - 1) * rcy[Ky - 1] / z + rcy[Ky - 2]
-        
-        if n >= 2:
-            M = MSTA1(z, 200)
+            drcy[0] = np.sin(z)
+            drcy[1] = -rcy[1] / z + rcy[0]
             
-            if M < n:
-                NM = M
-            else:
-                M = MSTA2(z, n, 15)
+            for Ky in range(3, NMy + 2):
+                drcy[Ky - 1] = -(Ky - 1) * rcy[Ky - 1] / z + rcy[Ky - 2]
             
-            F0 = 0.0
-            F1 = 1.0e-100
-            
-            for K in range(M + 1, 0, -1):
-                F = (2.0 * (K - 1) + 3.0) * F1 / z - F0
+            if n >= 2:
+                M = MSTA1(z, 200)
                 
-                if K <= NM + 1:
-                    rcj[K - 1] = F
+                if M < n:
+                    NM = M
+                else:
+                    M = MSTA2(z, n, 15)
                 
-                F0 = F1
-                F1 = F
+                F0 = 0.0
+                F1 = 1.0e-100
+                
+                for K in range(M + 1, 0, -1):
+                    F = (2.0 * (K - 1) + 3.0) * F1 / z - F0
+                    
+                    if K <= NM + 1:
+                        rcj[K - 1] = F
+                    
+                    F0 = F1
+                    F1 = F
+                
+                if abs(rcj0) > abs(rcj1):
+                    CS = rcj0 / F
+                else:
+                    CS = rcj1 / F0
+                
+                for K in range(1, NM + 2):
+                    rcj[K - 1] = CS * rcj[K - 1]
             
-            if abs(rcj0) > abs(rcj1):
-                CS = rcj0 / F
-            else:
-                CS = rcj1 / F0
+            drcj[0] = np.cos(z)
+            drcj[1] = -rcj[1] / z + rcj0
             
-            for K in range(1, NM + 2):
-                rcj[K - 1] = CS * rcj[K - 1]
-        
-        drcj[0] = np.cos(z)
-        drcj[1] = -rcj[1] / z + rcj0
-        
-        for K in range(3, NM + 2):
-            drcj[K - 1] = -(K - 1) * rcj[K - 1] / z + rcj[K - 2]
+            for K in range(3, NM + 2):
+                drcj[K - 1] = -(K - 1) * rcj[K - 1] / z + rcj[K - 2]
     
     return rcj, rcy, drcj, drcy
+
+n = 3
+z = 0
+print(rcbesselc(z, n))
