@@ -12,7 +12,7 @@ def ReadDielectricFunction(filename):
     # wavelength
     lambdaa = df.iloc[:, 0] * 1e-9  # meter
 
-    epsi = epsi.to_numpy()
+    epsi = epsi.to_numpy(dtype=np.complex128)
     lambdaa = lambdaa.to_numpy()    
     
     return lambdaa, epsi

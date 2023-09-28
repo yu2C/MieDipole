@@ -59,8 +59,8 @@ Settings1['DOri']['Sph'] = VecTrans(Settings1['DOri']['Cart'], Settings1['DPos']
 Settings1['nn'] = Settings1['nr'].shape[0]
 
 # Coordinate Transformation
-Settings1['APos']['Sph'] = C2S(Settings1['APos']['Cart'])
-Settings1['AOri']['Sph'] = VecTrans(Settings1['AOri']['Cart'], Settings1['APos']['Sph'][1:3], 'C2S')
+Settings1['APos']['Sph']  = C2S(Settings1['APos']['Cart'])
+Settings1['AOri']['Sph']  = VecTrans(Settings1['AOri']['Cart'], Settings1['APos']['Sph'][1:3], 'C2S')
 Settings1['APos']['Sph2'] = C2S(Settings1['APos']['Cart'] - Settings1['DPos']['Cart'])
 
 # Angular Functions

@@ -16,7 +16,7 @@
 	  },
 	  "nmax"	   : 70,
 	  "BC"		   : "sphere",
-	  "rbc"		   : [60e-9],
+	  "rbc"		   : [70e-9],
 	  "Dpstrength" : 1
     },
   "tmp_set"	 : {

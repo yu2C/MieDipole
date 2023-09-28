@@ -2,11 +2,13 @@ import json
 import numpy as np
 from ReadDielectrcFunction import ReadDielectricFunction
 from Interpolation import Interpolation
+import scipy.io as sio
 
 
 def read_settings(filename):
     # Initialization
     error_msg = False
+    result    = {}
     
     with open(filename, 'r') as file:
         input_data = json.load(file)
@@ -45,23 +47,29 @@ def read_settings(filename):
     if 'epsi0' in tmp_set:
         if isinstance(tmp_set['epsi0'], str):
             lambda0, epsi0 = ReadDielectricFunction(tmp_set['epsi0'])
-            print("if")
+            #print("epsi0if")
         else:
             lambda0 = np.array([0])
             epsi0 = tmp_set['epsi0']
-            print("else")
+            #print("spsi0else")
         
-        print(lambda0)
+        #print(lambda0)
     else:
-        print("epsi0 isn't assigned yet.")
+        #print("epsi0 isn't assigned yet.")
         error_msg = True
 
     if 'epsi1' in tmp_set:
         if isinstance(tmp_set['epsi1'], str):
             lambda1, epsi1 = ReadDielectricFunction(tmp_set['epsi1'])
+            #print("epsi1if")
+
         else:
             lambda1 = np.array([0])
             epsi1 = tmp_set['epsi1']
+            #print("epsi1else")
+            
+        #print(lambda1)
+
     else:
         print("epsi1 isn't assigned yet.")
         error_msg = True
@@ -81,14 +89,15 @@ def read_settings(filename):
     # Post-Processing for Different Mode
     if Settings['ModeName'] == 'wavelength':
         if Settings['BC'] == 'sphere':
-            if len(lambda0) > 0:
+            if lambda0.size > lambda1.size:
                 mind_lambda = 0
                 lambdaa = lambda0  # unit: m
-            elif len(lambda1) > 0:
+            else:
                 mind_lambda = 1
                 lambdaa = lambda1  # unit: m
 
-            nr = np.zeros((len(lambdaa), 2))
+            #print(lambdaa)
+            nr = np.zeros((len(lambdaa), 2), dtype=np.complex128)
             nr[:, 0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
             nr[:, 1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
         elif Settings['BC'] == 'coreshell':
@@ -136,18 +145,20 @@ def read_settings(filename):
             nr[2] = np.sqrt(Interpolation(lambdaa, lambda2, epsi2))
 
     Settings['lambda'] = lambdaa
-    Settings['k0'] = 2 * np.pi / lambdaa
-    Settings['nr'] = nr
-    Settings['rbc'] = np.transpose(Settings['rbc'])
-    Settings['k0s'] = Settings['k0'] * Settings['rbc']
+    Settings['k0']     = 2 * np.pi / lambdaa
+    Settings['nr']     = nr
+    Settings['rbc']    = np.transpose(Settings['rbc'])
+    Settings['k0s']    = Settings['k0'] * Settings['rbc']
 
 
     result = {
-        "Settings": Settings,
-        "fplot": fplot,
-        "error_msg": error_msg
+        "Settings_py": Settings,
+        #"fplot": fplot,
+        "error_msg_py": error_msg
     }
-
+    
+    
+    
     return result
 
 
@@ -156,4 +167,6 @@ def read_settings(filename):
 # Usage example
 filename = './123/function/Demo_WavelengthMode_CF_PCRET.json'  # Update with your file path
 result = read_settings(filename)
-print(result)
+#print(type(result))
+
+#sio.savemat('./ReadSettings_py.mat', mdict=result)
