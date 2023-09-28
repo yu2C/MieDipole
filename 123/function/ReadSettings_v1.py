@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from ReadDielectrcFunction import ReadDielectricFunction
+from Interpolation import Interpolation
 
 
 def read_settings(filename):
@@ -88,8 +89,8 @@ def read_settings(filename):
                 lambdaa = lambda1  # unit: m
 
             nr = np.zeros((len(lambdaa), 2))
-            nr[:, 0] = np.sqrt(np.interp(lambdaa, lambda0, epsi0))
-            nr[:, 1] = np.sqrt(np.interp(lambdaa, lambda1, epsi1))
+            nr[:, 0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
+            nr[:, 1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
         elif Settings['BC'] == 'coreshell':
             # Choose the appropriate lambda based on availability
             if len(lambda0) > 0:
@@ -121,21 +122,21 @@ def read_settings(filename):
         Settings['APos']['Sph'] = np.array([R, Theta, Phi])
 
         if tmp_set['lambda_i'] == tmp_set['lambda_f']:
-            lambda_val = tmp_set['lambda_i']
+            lambdaa = tmp_set['lambda_i']
 
         if Settings['BC'] == 'sphere':
             nr = np.zeros(2)
-            nr[0] = np.sqrt(Interpolation(lambda_val, lambda0, epsi0))
-            nr[1] = np.sqrt(Interpolation(lambda_val, lambda1, epsi1))
+            nr[0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
+            nr[1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
 
         elif Settings['BC'] == 'coreshell':
             nr = np.zeros(3)
-            nr[0] = np.sqrt(Interpolation(lambda_val, lambda0, epsi0))
-            nr[1] = np.sqrt(Interpolation(lambda_val, lambda1, epsi1))
-            nr[2] = np.sqrt(Interpolation(lambda_val, lambda2, epsi2))
+            nr[0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
+            nr[1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
+            nr[2] = np.sqrt(Interpolation(lambdaa, lambda2, epsi2))
 
-    Settings['lambda'] = lambda_val
-    Settings['k0'] = 2 * np.pi / lambda_val
+    Settings['lambda'] = lambdaa
+    Settings['k0'] = 2 * np.pi / lambdaa
     Settings['nr'] = nr
     Settings['rbc'] = np.transpose(Settings['rbc'])
     Settings['k0s'] = Settings['k0'] * Settings['rbc']

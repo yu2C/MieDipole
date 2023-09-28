@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.interpolate import interp1d
 
-def interpolation(wavelength, wavelengthi, epsii):
+def Interpolation(wavelength, wavelengthi, epsii):
     if wavelengthi.shape[0] == 1:
         epsi = np.full(wavelength.shape, epsii)
     else:
