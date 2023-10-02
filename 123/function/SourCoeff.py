@@ -15,6 +15,7 @@
 # Outputs : Source   --- source expansion coefficients
 #            .p      --- coefficient p
 #            .q      --- coefficient q
+# Call function : VecSphFunc
 
 #import Settings1
 import numpy as np

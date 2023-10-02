@@ -37,7 +37,7 @@ def MieSingle(nr, ks, nmax):
     n1psi, n1dpsi = n1Rad['psi'], n1Rad['dpsi']
     
     alpha = -(n1 * n0dpsi * n1psi - n0 * n0psi * n1dpsi) / (n1 * n0dxi * n1psi - n0 * n0xi * n1dpsi)
-    beta = - (n0 * n0dpsi * n1psi - n1 * n0psi * n1dpsi) / (n0 * n0dxi * n1psi - n1 * n0xi * n1dpsi)
+    beta  = - (n0 * n0dpsi * n1psi - n1 * n0psi * n1dpsi) / (n0 * n0dxi * n1psi - n1 * n0xi * n1dpsi)
     gamma = n1 * (n0dpsi * n0xi - n0psi * n0dxi) / (n1 * n1dpsi * n0xi - n0 * n1psi * n0dxi)
     delta = n1 * (n0dpsi * n0xi - n0psi * n0dxi) / (n0 * n1dpsi * n0xi - n1 * n1psi * n0dxi)
     
