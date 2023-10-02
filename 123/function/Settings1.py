@@ -76,3 +76,6 @@ Settings = Settings1
 #print(Settings)
 #print(Settings['DRad'])
 #print(rhoD)
+filename = f'./Settings_VSF.mat'
+sio.savemat(filename, mdict={'Settings': Settings})
+print(f'Settings_VSF saved to {filename}')

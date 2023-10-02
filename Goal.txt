@@ -3,7 +3,7 @@ New mothed beyond PC-RET
 TCD (transition current density):
     spatial dependent --> more than one points(dipole appr.) to calculate
     How to use in computational chemistry?
-    can separate by HOMO and LUMO by Condon-like appr.
+    can separate by HOMO and LUMO by Condon-like approx.
 
 Rate eqn
 Absorption (emission) spectrum and electromagnetic coupling factor

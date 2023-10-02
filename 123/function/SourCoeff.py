@@ -103,7 +103,7 @@ def SourCoeff(Settings, type):
     
     return Source
 
-'''
-from Settings1 import Settings
-print(SourCoeff(Settings, type="Green's function only"))
-'''
+
+#from Settings1 import Settings
+#print(Settings)
+#print(SourCoeff(Settings, type="Green's function only"))

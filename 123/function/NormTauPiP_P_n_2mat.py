@@ -85,25 +85,29 @@ def NormTauPiP(nmax, theta, order):
     return NAng
 
 # wrap the result in .mat
-nmax = 1
-# Number of points you want between 0 and pi (inclusive)
-num_points = 628  # Adjust as needed
 
-# Modify the loop to save files with varying numbers in the filename
-theta_values = np.linspace(0, 2*np.pi, num_points)
+
+import numpy as np
+import scipy.io as sio
+
+# Define the number of points and nmax
+nmax = 50
+num_points = 628
+
 # ... (previous code) ...
+theta_values = np.linspace(0, 2*np.pi, num_points)
 
 # Initialize an array to store the results
 result_array = np.zeros((num_points, 2 * nmax + 1))
 
 # Modify the loop to store the NP values in the array
 for i, theta in enumerate(theta_values):
-    NAng = NormTauPiP(1, theta, 'normal')
-    result_array[i, :] = NAng['NTau'][0, :]  # Store the first three values in NP for each theta
+    NAng = NormTauPiP(nmax, theta, 'normal')  # Adjusted for nmax
+    result_array[i, :] = NAng['NP'][0, :]  # Store the first 2*nmax+1 values in NP for each theta
 
 # Save the array as a .mat file
-filename = 'NormTauPiP_NTau_n.mat'
-sio.savemat(filename, {'NTau_pyvalues': result_array})
+filename = f'NormTauPiP_NP_n{nmax}.mat'  # Adjusted for nmax
+sio.savemat(filename, {'NP_pyvalues': result_array})
 
 # Print a message indicating successful save
-print(f'NTau_pyvalues saved to {filename}')
+print(f'NP_pyvalues saved to {filename}')

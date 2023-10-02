@@ -47,4 +47,4 @@ def MSTA2(z, n, mp):
     
     return nn + 10
 
-print(MSTA2(1, 2, 15))
+#print(MSTA2(1, 2, 15))

@@ -16,6 +16,7 @@ def envj(n, z):
     result = 0.5 * np.log10(6.28 * n) - n * np.log10(1.36 * z / n)
     return result
 
+'''
 print(envj(1, 1))
 
 # Define the range of z values
@@ -40,3 +41,4 @@ plt.ylim(-8, 10)
 plt.grid(True)
 plt.legend()
 plt.show()
+'''

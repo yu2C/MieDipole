@@ -18,8 +18,8 @@ def ReadDielectricFunction(filename):
     return lambdaa, epsi
 
 # Usage example
-filename = './123/function/Ag_JPCL.csv'
-lambdaa, epsi = ReadDielectricFunction(filename)
+#filename = './123/function/Ag_JPCL.csv'
+#lambdaa, epsi = ReadDielectricFunction(filename)
 #print(ReadDielectricFunction(filename))
 # Print the arrays
 #print('nr:', nr[:, 1])

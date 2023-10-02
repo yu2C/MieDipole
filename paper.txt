@@ -1,0 +1,1450 @@
+<prompt>
+I want you act as a professional programmer and theoretical phycisc scientist,
+to transformer the matlab code to python code about calculating generalized 
+Mie theory.  I will give you a matlab/python code with brief command, 
+you should follow the command to explain/transfer/debug the code. 
+It's important that do not change the matlab code only if I tell you to do that.
+Before you give me the result, you should test it whether can run, and 
+if neccesary, hightlight the lines of code that may have problem or something
+I should notice. There're mamy functions that I define by myself is given below
+def C2S(rcart):
+    # Assigning the Cartesian Components
+    x = rcart[0, :]
+    y = rcart[1, :]
+    z = rcart[2, :]
+    
+    # Radial Distance
+    r = np.sqrt(x**2 + y**2 + z**2)
+    
+    # Polar Angle
+    #theta = np.arccos(z / r)
+    theta = np.arctan2(np.sqrt(r**2 - z**2), z)
+    
+    # Assigning Polar Angle when r = 0
+    #theta[np.logical_not(np.any(r, axis=0))] = 0
+    
+    # Azimuthal Angle
+    phi = np.arctan2(y, x)
+    
+    # Assigning Azimuthal Angle when x = 0 and y = 0
+    phi[np.logical_and(np.logical_not(np.any(y, axis=0)), np.logical_not(np.any(x, axis=0)))] = 0
+    
+    # Assigning Azimuthal Angle when x < 0
+    phi[np.logical_and(x < 0, np.any(y, axis=0))] = np.pi
+    
+    # Column Form
+    rsph = np.vstack((r, theta, phi))#, dtype=complex)
+    
+    return rsph
+
+def Dlog(z, n):
+    nex = n + int(np.floor(np.abs(1.0478 * z + 18.692)))
+    D1  = np.zeros(nex, dtype = np.complex128)
+    D3  = np.zeros(n, dtype = np.complex128)
+
+    for nn in range(nex, 1, -1):
+        D1[nn - 2] = nn / z - 1 / (nn / z + D1[nn - 1])
+
+    D1[0] = (z ** 2 * np.tan(z) + z - np.tan(z)) / (-z ** 2 + z * np.tan(z))
+    D3[0] = (1j * z ** 2 - z - 1j) / (z ** 2 + 1j * z)
+
+    for nn in range(2, n + 1):
+        D3[nn - 1] = -nn / z + 1 / (nn / z - D3[nn - 2])
+
+    return D1[:n], D3
+
+def EdipField(nr, k, rdip, vdip):
+    # Preallocation
+    NX    = np.zeros((3, 1), dtype=np.complex128)
+    NY    = np.zeros((3, 1), dtype=np.complex128)
+    NZ    = np.zeros((3, 1), dtype=np.complex128)
+    r     = rdip[0]
+    theta = rdip[1]
+    phi   = rdip[2]
+
+    # Radial Function (1j * k^3 is canceled)
+    Rad1 = np.exp(1j * k * r) / r * (1 / r**2 - 1j * k / r)
+    Rad2 = np.exp(1j * k * r) / r * (k**2 + 1j * k / r - 1 / r**2)
+    #print(Rad1)
+    #print(Rad2)
+    # Z-Component (1j * k^3 is canceled)
+    NZ[0] =  Rad1 * np.cos(theta) * 2
+    NZ[1] = -Rad2 * np.sin(theta)
+
+    # X-Component (1j * k^3 is canceled)
+    NX[0] =  Rad1 * np.sin(theta) * np.cos(phi) * 2
+    NX[1] =  Rad2 * np.cos(theta) * np.cos(phi)
+    NX[2] = -Rad2 * np.sin(phi)
+
+    # Y-Component (1j * k^3 is canceled)
+    NY[0] =  Rad1 * np.sin(theta) * np.sin(phi) * 2
+    NY[1] =  Rad2 * np.cos(theta) * np.sin(phi)
+    NY[2] =  Rad2 * np.cos(phi)
+
+    # Electric Dipole Field (Gaussian Unit)
+    EdipS = (NX * vdip[0] + NY * vdip[1] + NZ * vdip[2]) * nr
+
+    return EdipS
+
+def MieSingle(nr, ks, nmax):
+    try:
+        if len(nr) != 2 or len(ks) != 1:
+            raise ValueError("Error input size of 'nr' or 'ks' from 'MieSingle'")
+    except TypeError:
+        print("Error: 'ks' should be a list or array with one element.")
+        return None
+    
+    n0, n1 = nr
+    n0kr1, n1kr1 = n0 * ks[0], n1 * ks[0]
+    
+    n0Rad = SphBessel(n0kr1, nmax, 1, 'bessel')
+    n0psi, n0dpsi = n0Rad['psi'], n0Rad['dpsi']
+    
+    n0Rad = SphBessel(n0kr1, nmax, 1, 'hankel1')
+    n0xi, n0dxi = n0Rad['xi'], n0Rad['dxi']
+    
+    n1Rad = SphBessel(n1kr1, nmax, 1, 'bessel')
+    n1psi, n1dpsi = n1Rad['psi'], n1Rad['dpsi']
+    
+    alpha = -(n1 * n0dpsi * n1psi - n0 * n0psi * n1dpsi) / (n1 * n0dxi * n1psi - n0 * n0xi * n1dpsi)
+    beta = - (n0 * n0dpsi * n1psi - n1 * n0psi * n1dpsi) / (n0 * n0dxi * n1psi - n1 * n0xi * n1dpsi)
+    gamma = n1 * (n0dpsi * n0xi - n0psi * n0dxi) / (n1 * n1dpsi * n0xi - n0 * n1psi * n0dxi)
+    delta = n1 * (n0dpsi * n0xi - n0psi * n0dxi) / (n0 * n1dpsi * n0xi - n1 * n1psi * n0dxi)
+    
+    Coeffs = {
+        'alpha': alpha,
+        'beta' : beta,
+        'gamma': gamma,
+        'delta': delta
+    }
+    
+    return Coeffs
+
+def Wigner_d(j, theta):
+    # Calculation of J+
+    m = np.arange(-j, j)
+    J = np.diag(np.sqrt((j - m) * (j + m + 1)), k=-1)
+    
+    # Create the Spectral Decomposition Matrix J_y at z Representation
+    Jy = (J - J.T) / (2j)
+    
+    # Diagonalization
+    D, V = np.linalg.eig(Jy)
+    
+    # Unitary Transformation
+    d = V @ np.diag(np.exp(-1j * theta *D)) @ V.conj().T
+    
+    # Check the Quality of the Transformation
+    #np.max() will just output a number instead of column or row vector
+    if np.max(np.abs(np.imag(d))) > 1e-12:
+        warn_mes = 'Wigner_d may not give reliable results.'
+        print(warn_mes)
+    
+    # Change Data Type (complex -> real)
+    dd= np.real(d)
+    
+    return dd
+
+
+def NormTauPiP(nmax, theta, order):
+    # Preallocation
+    NTau = np.zeros((nmax, 2 * nmax + 1))
+    NPi  = np.zeros((nmax, 2 * nmax + 1))
+    NP   = np.zeros((nmax, 2 * nmax + 1))
+    
+    for indn in range(1, nmax + 1):
+        # Calling Wigner d Matrix of Order n
+        dn = Wigner_d(indn, theta)
+        
+        # Setting the Order
+        if order == 'normal':
+            # d_(m,+1)^n
+            dnp1 = dn[:, indn + 1]
+            # d_(m,0)^n
+            dn01 = dn[:, indn ]
+            # d_(m,-1)^n
+            dnn1 = dn[:, indn - 1]
+        elif order == 'reversed':
+            # d_(m,+1)^n
+            dnp1 = np.flip(dn[:, indn + 1])
+            # d_(m,0)^n
+            dn01 = np.flip(dn[:, indn ])
+            # d_(m,-1)^n
+            dnn1 = np.flip(dn[:, indn - 1])
+        
+        # Normalization Constants
+        NormTauPi = np.sqrt((2 * indn + 1) / 8)
+        NormP = np.sqrt((2 * indn + 1) / (2 * indn * (indn + 1)))
+        
+        # Output Functions
+        NPi[indn - 1, :2 * indn + 1] = -NormTauPi * (dnp1 + dnn1)
+        NTau[indn - 1, :2 * indn + 1] = -NormTauPi * (dnp1 - dnn1)
+        NP[indn - 1, :2 * indn + 1] = NormP * dn01
+    
+    # Correction to the Floating Numbers
+    NPi[np.abs(NPi) < 1e-15] = 0
+    NTau[np.abs(NTau) < 1e-15] = 0
+    NP[np.abs(NP) < 1e-15] = 0
+    
+    # Output a Dictionary
+    NAng = {'NPi': NPi, 'NTau': NTau, 'NP': NP}
+    # wrap the result in .mat
+    #sio.savemat('./NormTauPiP.mat', mdict=NAng)
+    return NAng
+
+def S2S(S2, S1t, S1p):
+    cost = np.cos(S1t)
+    sint = np.sin(S1t)
+    cosp = np.cos(S1p)
+    
+    # Rotation matrix
+    T = np.array([
+        [cost, -sint, 0   ],
+        [sint, cost , 0   ],
+        [0   , 0    , cosp]
+        ]) 
+    
+    # Perform the coordinate transformation
+    S1 = np.dot(T, S2)
+    
+    return S1
+
+def MSTA1(z, mp):
+    a0 = abs(z)
+    n0 = int(1.1 * a0) + 1
+    f0 = envj(n0, a0) - mp
+    n1 = n0 + 5
+    f1 = envj(n1, a0) - mp
+    
+    for _ in range(20):
+        nn = n1 - (n1 - n0) / (1.0 - f0 / f1)
+        nn = int(nn)
+        f = envj(nn, a0) - mp
+        
+        if abs(nn - n1) < 1:
+            break
+        
+        n0 = n1
+        f0 = f1
+        n1 = nn
+        f1 = f
+    
+    return nn
+
+def MSTA2(z, n, mp):
+    a0 = abs(z)
+    hmp = 0.5 * mp
+    ejn = envj(n, a0)
+    
+    if ejn <= hmp:
+        obj = mp
+        n0 = int(1.1 * a0)
+    else:
+        obj = hmp + ejn
+        n0 = n
+    
+    f0 = envj(n0, a0) - obj
+    n1 = n0 + 5
+    f1 = envj(n1, a0) - obj
+    
+    for _ in range(20):
+        nn = n1 - (n1 - n0) / (1.0 - f0 / f1)
+        nn = int(nn)
+        f = envj(nn, a0) - obj
+        
+        if abs(nn - n1) < 1:
+            break
+        
+        n0 = n1
+        f0 = f1
+        n1 = nn
+        f1 = f
+    
+    return nn + 10
+
+def envj(n, z):
+    n = max(1, abs(n))
+    result = 0.5 * np.log10(6.28 * n) - n * np.log10(1.36 * z / n)
+    return result
+
+def sbesselc(z, n):
+    a0 = abs(z)
+    nm = n
+    
+    # If circle checked
+    if a0 < 1e-60:
+        csj = np.zeros(n + 1, dtype=np.complex128)
+        csy = np.full((n + 1, -1e300), dtype=np.complex128)
+        csy[0] = 1.0
+        return csj, csy
+    
+    # checked
+    csj = np.zeros(n + 1, dtype=np.complex128)
+    csj[0] = np.sin(z) / z
+    csj[1] = (csj[0] - np.cos(z)) / z
+    
+    if n >= 2:
+        csa = csj[0]
+        csb = csj[1]
+        m = MSTA1(a0, 200)
+
+        if m < n:
+            nm = m
+        else:
+            m = MSTA2(a0, n, 15)
+        
+        cf0 = 0.0
+        cf1 = 1.0 - 100
+        
+        for k in range(m, -1, -1):
+            j = k + 1
+            cf = (2.0 * k + 3.0) * cf1 / z - cf0
+            
+            if k <= nm:
+                csj[j - 1] = cf
+            
+            cf0 = cf1
+            cf1 = cf
+        
+        if abs(csa) > abs(csb):
+            cs = csa / cf
+        else:
+            cs = csb / cf0
+        
+        for k in range(min(nm, n) + 1):
+            j = k + 1
+            csj[j - 1] = cs * csj[j - 1]
+    
+    csy = np.full(n + 1, 1e200, dtype=np.complex128)
+    csy[0] = -np.cos(z) / z
+    csy[1] = (csy[0] - np.sin(z)) / z
+    
+    # This is test j --> j - 1
+    for k in range(2, min(nm, n) + 1):
+        j = k + 1
+        
+        if abs(csj[j - 2]) >= abs(csj[j - 3]):
+            csy[j - 1] = (csj[j - 1] * csy[j - 2] - 1.0 / z ** 2) / csj[j - 2]
+        else:
+            csy[j - 1] = (csj[j - 1] * csy[j - 3] - (2.0 * k - 1.0) / z ** 3) / csj[j - 3]
+    
+    return csj, csy
+
+def rcbesselc(z, n):
+    rcj  = np.zeros(n + 1, dtype=np.complex128)
+    rcy  = np.zeros(n + 1, dtype=np.complex128)
+    drcj = np.zeros(n + 1, dtype=np.complex128)
+    drcy = np.zeros(n + 1, dtype=np.complex128)
+    NM   = n
+    NMy  = 0
+    Ky   = 0
+    
+    if abs(z) < 1e-60: # Treat z = 0 as a special case
+        print('ricatti-bessel function precision down')
+        drcj[0] = 1.0 # zeroth order
+        rcy     = -1.0e300 * np.ones(n + 1)
+        drcy    = 1.0e300 * np.ones(n + 1)
+        rcy[0]  = -1.0
+        drcy[0] = 0.0
+    else:
+        rcj[0] = np.sin(z)  # zeroth order
+        rcy[0] = -np.cos(z)
+        rcj[1] = rcj[0] / z - np.cos(z)  # first order
+        rcy[1] = rcy[0] / z - np.sin(z)
+        rcj0   = rcj[0]
+        rcj1   = rcj[1]
+        RF0    = rcy[0]
+        RF1    = rcy[1]
+        
+        for Ky in range(3, n + 2):
+            RF2 = (2.0 * (Ky - 1) - 1.0) * RF1 / z - RF0
+            
+            if abs(RF2) > 1.0e300:
+                continue
+            
+            rcy[Ky - 1] = RF2
+            RF0 = RF1
+            RF1 = RF2
+        
+        NMy = Ky - 1  
+        #print(NMy)
+        
+        
+    
+    
+        drcy[0] = np.sin(z)
+        drcy[1] = -rcy[1] / z + rcy[0]
+        
+        for Ky in range(3, NMy + 2):
+            drcy[Ky - 1] = -(Ky - 1) * rcy[Ky - 1] / z + rcy[Ky - 2]
+        
+        if n >= 2:
+            M = MSTA1(z, 200)
+            
+            if M < n:
+                NM = M
+            else:
+                M = MSTA2(z, n, 15)
+            
+            F0 = 0.0
+            F1 = 1.0e-100
+            
+            for K in range(M + 1, 0, -1):
+                F = (2.0 * (K - 1) + 3.0) * F1 / z - F0
+                
+                if K <= NM + 1:
+                    rcj[K - 1] = F
+                
+                F0 = F1
+                F1 = F
+            
+            if abs(rcj0) > abs(rcj1):
+                CS = rcj0 / F
+            else:
+                CS = rcj1 / F0
+            
+            for K in range(1, NM + 2):
+                rcj[K - 1] = CS * rcj[K - 1]
+        
+        drcj[0] = np.cos(z)
+        drcj[1] = -rcj[1] / z + rcj0
+        
+        for K in range(3, NM + 2): # 3, NM + 2
+            drcj[K - 1] = -(K - 1) * rcj[K - 1] / z + rcj[K - 2]
+    
+    return rcj, rcy, drcj, drcy
+
+
+def SphBessel(kr, nmax, array, type):
+    Rad = {}
+
+    if type == 'bessel':
+        if kr == 0:
+            z1    = np.zeros(nmax, dtypes=np.complex128)
+            Z     = np.zeros(nmax, dtypes=np.complex128)
+            dZ    = np.zeros(nmax, dtypes=np.complex128)
+            raddZ = np.zeros(nmax, dtypes=np.complex128)
+            raddZ[0] = 2/3
+            if array == 0:
+                z1    = z1[nmax]
+                Z     = Z[nmax]
+                dZ    = dZ[nmax]
+                raddZ = raddZ[nmax]
+        else:
+            csj, _ = sbesselc(kr, nmax)
+            if array == 1:
+                z1 = csj[1:nmax+1]
+            else:
+                z1 = csj[nmax]
+                
+            rcj, _, drcj, _ = rcbesselc(kr, nmax)
+            
+            if array == 0:
+                Z = rcj[nmax]
+                dZ = drcj[nmax]
+                raddZ = dZ / kr
+            else:
+                rcj = rcj[1:]
+                drcj = drcj[1:]
+                Z = rcj
+                dZ = drcj
+                raddZ = dZ / kr
+        
+        Rad['j1'] = z1
+        Rad['psi'] = Z
+        Rad['dpsi'] = dZ
+        Rad['raddpsi'] = raddZ
+    
+    elif type == 'hankel1':
+        if kr == 0:
+            if nmax == 0:
+                z1 = 1 - 1j * 1e300
+                Z = -1j
+                dZ = 1
+            else:
+                z1 = complex(0, -1e300)
+                Z = complex(0, -1e300)
+                dZ = 1j * 1e300
+                raddZ = 0
+        else:
+            csj, csy = sbesselc(kr, nmax)
+            
+            if len(csj) < (nmax + 1) or len(csy) < (nmax + 1):
+                raise ValueError('Please decrease the expansion order "n".')
+            
+            if array == 1:
+                z1 = csj[1:nmax+1] + 1j * csy[1:nmax+1]
+            else:
+                z1 = csj[nmax] + 1j * csy[nmax]
+            
+            rcj, rcy, drcj, drcy = rcbesselc(kr, nmax)
+            
+            if array == 0:
+                Z = rcj[nmax] + 1j * rcy[nmax]
+                dZ = drcj[nmax] + 1j * drcy[nmax]
+                raddZ = dZ / kr
+            else:
+                rcj = rcj[1:]
+                rcy = rcy[1:]
+                drcj = drcj[1:]
+                drcy = drcy[1:]
+                Z = rcj + 1j * rcy
+                dZ = drcj + 1j * drcy
+                raddZ = dZ / kr
+        
+        Rad['h1'] = z1
+        Rad['xi'] = Z
+        Rad['dxi'] = dZ
+        Rad['raddxi'] = raddZ
+    
+    #sio.savemat('./SphBessel.mat', mdict=Rad)
+    return Rad
+
+def VecTrans(vini, solidangle, type):
+    # Solid Angle to Polar Angle and Azimuthal Angle
+    (theta, phi) = (solidangle[0], solidangle[1])
+    
+    # Calculating cos(theta) and sin(theta)
+    if theta == 0:
+        sint = 0
+        cost = 1
+    elif theta == np.pi:
+        sint = 0
+        cost = -1
+    elif theta == np.pi/2 or theta == 3*np.pi/2:
+        cost = 0
+        sint = 1
+    else:
+        cost = np.cos(theta)
+        sint = np.sin(theta)
+    
+    # Calculating cos(phi) and sin(phi)
+    if phi == 0:
+        sinp = 0
+        cosp = 1
+    elif phi == np.pi/2:
+        cosp = 0
+        sinp = 1
+    else:
+        cosp = np.cos(phi)
+        sinp = np.sin(phi)
+    
+    # Transform Matrix
+    T = np.array([[sint * cosp, cost * cosp, -sinp],
+                  [sint * sinp, cost * sinp, cosp],
+                  [cost, -sint, 0]
+                  ])
+    #print(np.array([[sint * cosp, cost * cosp, -sinp],
+     #             [sint * sinp, cost * sinp, cosp],
+      #            [cost, -sint, 0]
+       #           ]))
+    # Assigning the Type of Transformation
+    if type == 'C2S':
+        T = np.transpose(T)
+    elif type != 'S2C':
+        print('Error from function "VecTrans"')
+    
+    #vfin = np.dot(T, vini)
+    vfin = T @ vini
+    return vfin
+
+def VectSphFunc(kr, nmax, Rad, NAng, emphi):
+    #Rad   = SphBessel.Rad(kr, nmax, array, type)
+    #NAng  = NormTauPiP.NAng(nmax, theta, order)
+    # Preallocation
+    VSF_M = np.zeros((nmax, 2 * nmax + 1, 3), dtype=complex)
+    VSF_N = np.zeros((nmax, 2 * nmax + 1, 3), dtype=complex)
+    
+    # Extract Radial Functions
+    if   'h1' in Rad:
+        z1 = Rad['h1']
+    elif 'j1' in Rad:
+        z1 = Rad['j1']
+    
+    if   'raddxi'  in Rad:
+        raddz = Rad['raddxi']
+    elif 'raddpsi' in Rad:
+        raddz = Rad['raddpsi']
+    
+    # Construct the Array of Each Order
+    n = np.arange(1, nmax + 1)
+    
+    # Construct Radz (j_n(kr)/kr)
+    if kr == 0:
+        Radz = np.zeros(nmax, 1)
+        Radz[0] = 1/3
+    else:
+        Radz = np.transpose(z1) / kr
+    
+    # M Field
+    VSF_M[:, :, 1] = 1j * np.transpose(z1) @ NAng['NPi'] * emphi
+    VSF_M[:, :, 2] = -np.transpose(z1) @ NAng['NTau'] * emphi
+    
+    # N Field
+    VSF_N[:, :, 0] =  n * (n + 1) * Radz @ NAng['NP'] * emphi
+    VSF_N[:, :, 1] = np.transpose(raddz) @ NAng['NTau'] * emphi
+    VSF_N[:, :, 2] = 1j * np.transpose(raddz) @ NAng['NPi'] * emphi
+    
+    VSF = {'M': VSF_M, 'N': VSF_N}
+    #sio.savemat('./VectSphFunc.mat', mdict=VSF)
+    return VSF
+
+def Interpolation(wavelength, wavelengthi, epsii):
+    if wavelengthi.shape[0] == 1:
+        epsi = np.full(wavelength.shape, epsii, dtype=np.complex128)
+    else:
+        interp_func = PchipInterpolator(wavelengthi, epsii)
+        epsi = interp_func(wavelength)
+    return epsi
+
+If some function is reduncdant in python, plz tell me same things can be done by python package.
+
+And the some code about Input:
+
+Ag_JPCL.csv as the dielectric function resource
+299,0.800000000,2.666666666
+300,0.841553374,2.673433657
+301,0.868361202,2.575231995
+302,0.896159523,2.449660354
+303,0.917757041,2.324299918
+304,0.933336069,2.199436968
+305,0.943090985,2.075355476
+306,0.94722891,1.952335945
+307,0.94596728,1.830655179
+308,0.939536002,1.710587618
+309,0.92817649,1.592403529
+310,0.912142209,1.476370727
+311,0.896618415,1.359428499
+312,0.886418196,1.240963302
+313,0.866000677,1.133362595
+314,0.836554357,1.0363559
+315,0.799187986,0.949579995
+316,0.754931417,0.872579417
+317,0.704735029,0.804806385
+318,0.649469905,0.745620458
+319,0.589928035,0.694288976
+320,0.526822097,0.649986639
+321,0.42044216,0.630022523
+322,0.296525866,0.619022085
+323,0.180297886,0.604035315
+324,0.070618127,0.584743403
+325,-0.033649599,0.560872205
+326,-0.133638254,0.532192076
+327,-0.230476975,0.498517891
+328,-0.325291152,0.459709111
+329,-0.419202707,0.415669653
+330,-0.513329955,0.366348126
+331,-0.608787436,0.311737577
+332,-0.686992579,0.275185545
+333,-0.74529514,0.262958189
+334,-0.803402968,0.252995937
+335,-0.861333074,0.245757664
+336,-0.919074702,0.241683897
+337,-0.976589753,0.241196842
+338,-1.033812798,0.244700424
+339,-1.090650588,0.252580244
+340,-1.146983052,0.265203592
+341,-1.202662036,0.282919466
+342,-1.257511921,0.30605844
+343,-1.315181215,0.319219176
+344,-1.376590284,0.317831886
+345,-1.438173298,0.316051003
+346,-1.499860011,0.313893009
+347,-1.561580875,0.311374074
+348,-1.623268811,0.308510322
+349,-1.684857465,0.305317505
+350,-1.746281151,0.301811081
+351,-1.807476721,0.298006401
+352,-1.868381713,0.293918538
+353,-1.928934299,0.289562239
+354,-1.989075256,0.284952156
+355,-2.045637927,0.280973381
+356,-2.1010415,0.277194764
+357,-2.156294169,0.273371179
+358,-2.211364586,0.269514786
+359,-2.26622151,0.26563753
+360,-2.320834882,0.261751136
+361,-2.375174761,0.257867041
+362,-2.429211676,0.253996489
+363,-2.482916626,0.250150434
+364,-2.536261074,0.246339661
+365,-2.589216577,0.242574577
+366,-2.641755915,0.238865528
+367,-2.693852355,0.235222498
+368,-2.745745369,0.231572261
+369,-2.800046983,0.227206263
+370,-2.854326166,0.222967804
+371,-2.908568368,0.218866499
+372,-2.962759951,0.214911893
+373,-3.016886153,0.211113295
+374,-3.070934384,0.207479945
+375,-3.124889671,0.204020856
+376,-3.178739235,0.200744933
+377,-3.232469571,0.197660911
+378,-3.286066851,0.194777358
+379,-3.339517775,0.192102718
+380,-3.392809591,0.18964525
+381,-3.445928778,0.187413091
+382,-3.497506318,0.186519207
+383,-3.547816312,0.186846692
+384,-3.598245284,0.187299957
+385,-3.648788776,0.187882167
+386,-3.69944098,0.18859645
+387,-3.750197924,0.189445925
+388,-3.801054282,0.190433673
+389,-3.852005197,0.191562734
+390,-3.903045825,0.192836143
+391,-3.954171813,0.194256893
+392,-4.005377399,0.195827941
+393,-4.056659217,0.197552243
+394,-4.108011048,0.199432687
+395,-4.159428111,0.201472139
+396,-4.210906619,0.203673486
+397,-4.262441837,0.206039537
+398,-4.316558071,0.208206164
+399,-4.372334455,0.210108276
+400,-4.42817269,0.211927731
+401,-4.484069153,0.213662975
+402,-4.540015221,0.215312335
+403,-4.596008358,0.216874267
+404,-4.652040984,0.218347204
+405,-4.708108607,0.219729572
+406,-4.764204699,0.221019843
+407,-4.820324835,0.222216509
+408,-4.876462532,0.223318061
+409,-4.932613431,0.224323023
+410,-4.988771093,0.225229904
+411,-5.044932296,0.226037316
+412,-5.101088509,0.226743738
+413,-5.157237655,0.227347823
+414,-5.210975201,0.226165998
+415,-5.263655116,0.224310208
+416,-5.316202628,0.222460897
+417,-5.368611918,0.220619042
+418,-5.420876098,0.218785605
+419,-5.472989416,0.216961577
+420,-5.524947289,0.215147927
+421,-5.576744069,0.213345608
+422,-5.62837302,0.211555544
+423,-5.679829704,0.209778708
+424,-5.731107462,0.208015984
+425,-5.782201952,0.206268308
+426,-5.833106592,0.204536582
+427,-5.883817138,0.202821703
+428,-5.934327085,0.201124534
+429,-5.984632286,0.19944597
+430,-6.034727484,0.197786893
+431,-6.083399602,0.196699194
+432,-6.130920014,0.196264631
+433,-6.1786075,0.195951845
+434,-6.226463105,0.195762381
+435,-6.2744855,0.195697745
+436,-6.322675733,0.195759463
+437,-6.371032455,0.195949057
+438,-6.419555507,0.196268051
+439,-6.468245935,0.196717984
+440,-6.517102368,0.19730034
+441,-6.566124631,0.198016678
+442,-6.615313773,0.198868495
+443,-6.664668397,0.19985731
+444,-6.714189551,0.20098464
+445,-6.76387582,0.202252021
+446,-6.813727009,0.203660928
+447,-6.86374292,0.205212896
+448,-6.913924605,0.206909456
+449,-6.964271871,0.2087521
+450,-7.014781996,0.210742342
+451,-7.0662008,0.213100975
+452,-7.122101893,0.216802685
+453,-7.178114771,0.2204976
+454,-7.234238174,0.224185374
+455,-7.290470846,0.227865619
+456,-7.346811536,0.231537928
+457,-7.403260288,0.235201937
+458,-7.459813265,0.238857244
+459,-7.516471819,0.242503506
+460,-7.573232097,0.24614026
+461,-7.630095476,0.249767231
+462,-7.68705941,0.253383978
+463,-7.744122661,0.256990123
+464,-7.801283995,0.260585291
+465,-7.858543515,0.264169172
+466,-7.915897322,0.267741284
+467,-7.973346868,0.271301343
+468,-8.030888236,0.274848931
+469,-8.088522904,0.278383706
+470,-8.146248302,0.281905274
+471,-8.204063212,0.28541329
+472,-8.25946523,0.28774305
+473,-8.313103805,0.289175523
+474,-8.366824329,0.290564765
+475,-8.420624529,0.291910335
+476,-8.474504893,0.293211819
+477,-8.528464537,0.294468756
+478,-8.582502576,0.295680734
+479,-8.636618127,0.296847319
+480,-8.690808902,0.297968053
+481,-8.745075418,0.299042508
+482,-8.79941538,0.300070251
+483,-8.853830735,0.301050904
+484,-8.908317772,0.301983992
+485,-8.96287703,0.30286909
+486,-9.017507634,0.303705798
+487,-9.07220871,0.304493693
+488,-9.126977946,0.305232331
+489,-9.181815901,0.305921295
+490,-9.236721706,0.306560188
+491,-9.291693038,0.307148571
+492,-9.346731933,0.307686054
+493,-9.401834611,0.308172199
+494,-9.457001662,0.308606618
+495,-9.512230751,0.308988877
+496,-9.567603643,0.30931769
+497,-9.624341872,0.309632663
+498,-9.681289945,0.309995209
+499,-9.738449735,0.310405794
+500,-9.795818654,0.310864812
+501,-9.853398569,0.311372731
+502,-9.911189866,0.311929994
+503,-9.969192928,0.312537069
+504,-10.02740814,0.313194355
+505,-10.08583588,0.313902319
+506,-10.14447654,0.31466141
+507,-10.2033305,0.315472074
+508,-10.26239662,0.316334735
+509,-10.32167832,0.317249889
+510,-10.38117448,0.318217961
+511,-10.44088546,0.319239426
+512,-10.50081012,0.320314661
+513,-10.56095192,0.321444191
+514,-10.62130815,0.322628418
+515,-10.68188229,0.323867843
+516,-10.74267161,0.325162896
+517,-10.80367805,0.326514006
+518,-10.86490357,0.327921676
+519,-10.92634541,0.329386312
+520,-10.98800551,0.33090842
+521,-11.05008173,0.332643299
+522,-11.11562897,0.337036346
+523,-11.18118118,0.341371333
+524,-11.2467351,0.345647511
+525,-11.31228909,0.349864135
+526,-11.37784151,0.354020439
+527,-11.44339072,0.35811571
+528,-11.50893507,0.362149216
+529,-11.57447457,0.366120225
+530,-11.64000434,0.370027987
+531,-11.705526,0.373871831
+532,-11.77103469,0.377650961
+533,-11.83653206,0.381364741
+534,-11.9020132,0.385012382
+535,-11.96747982,0.388593256
+536,-12.03292865,0.392106633
+537,-12.09835811,0.39555179
+538,-12.1637666,0.398928057
+539,-12.22915252,0.402234743
+540,-12.2945143,0.405471134
+541,-12.35985035,0.408636572
+542,-12.42515909,0.41173038
+543,-12.49044064,0.414751882
+544,-12.55569005,0.417700377
+545,-12.62090745,0.420575225
+546,-12.68609297,0.423375763
+547,-12.75124337,0.426101331
+548,-12.81635538,0.428751215
+549,-12.87916774,0.429673517
+550,-12.93854308,0.428044211
+551,-12.99799209,0.426431535
+552,-13.0575178,0.42483574
+553,-13.11711635,0.423257018
+554,-13.17678908,0.421695617
+555,-13.2365373,0.420151732
+556,-13.29635889,0.418625635
+557,-13.3562517,0.417117465
+558,-13.41621881,0.415627494
+559,-13.47625809,0.414155942
+560,-13.53636912,0.412703026
+561,-13.59655152,0.411268938
+562,-13.65680487,0.409853893
+563,-13.71712878,0.408458137
+564,-13.77752285,0.407081886
+565,-13.83798668,0.405725328
+566,-13.89851986,0.404388708
+567,-13.959122,0.403072212
+568,-14.01979449,0.401776081
+569,-14.08053336,0.400500533
+570,-14.14134178,0.399245751
+571,-14.20221577,0.39801198
+572,-14.26315854,0.3967994
+573,-14.32416607,0.395608231
+574,-14.38524159,0.394438734
+575,-14.44638289,0.393291097
+576,-14.50758776,0.392165449
+577,-14.56885943,0.391062137
+578,-14.6301957,0.389981289
+579,-14.69159617,0.388923117
+580,-14.75306043,0.387887857
+581,-14.81458811,0.386875692
+582,-14.87617881,0.385886858
+583,-14.9422384,0.389035615
+584,-15.00880335,0.392571515
+585,-15.07544799,0.396090744
+586,-15.14217001,0.399593107
+587,-15.20896896,0.403078315
+588,-15.27584436,0.406546252
+589,-15.34279577,0.40999669
+590,-15.40982273,0.413429399
+591,-15.47692665,0.416844232
+592,-15.54410332,0.42024094
+593,-15.61135606,0.423619374
+594,-15.67868063,0.426979285
+595,-15.74608035,0.430320495
+596,-15.81355289,0.433642811
+597,-15.88109778,0.436946034
+598,-15.94871458,0.440229966
+599,-16.01640282,0.443494412
+600,-16.08416397,0.446739172
+601,-16.15199183,0.449963998
+602,-16.21989361,0.453168831
+603,-16.28786504,0.456353364
+604,-16.35590565,0.459517401
+605,-16.424015,0.462660807
+606,-16.49219263,0.465783329
+607,-16.56043422,0.468884746
+608,-16.62875096,0.47196503
+609,-16.69713074,0.475023825
+610,-16.76557701,0.47806099
+611,-16.83408931,0.481076305
+612,-16.9026672,0.484069607
+613,-16.97131022,0.487040735
+614,-17.04002187,0.489989462
+615,-17.10879382,0.492915578
+616,-17.17762957,0.495818917
+617,-17.24592188,0.49819472
+618,-17.31108592,0.49788904
+619,-17.37634536,0.497544072
+620,-17.44169606,0.49715957
+621,-17.50714182,0.496735403
+622,-17.57267849,0.496271293
+623,-17.63830588,0.495767081
+624,-17.70402381,0.495222613
+625,-17.76983611,0.494637691
+626,-17.83574263,0.494012159
+627,-17.90173514,0.493345686
+628,-17.96782151,0.492638259
+629,-18.03399754,0.49188957
+630,-18.10026709,0.491099551
+631,-18.16662595,0.490267896
+632,-18.23307392,0.489394449
+633,-18.29961083,0.488479024
+634,-18.36624058,0.487521488
+635,-18.43295891,0.486521568
+636,-18.49976974,0.485479196
+637,-18.56666881,0.484394067
+638,-18.63365592,0.483266027
+639,-18.70073503,0.482094977
+640,-18.76790183,0.480880579
+641,-18.83515614,0.479622746
+642,-18.90250193,0.478321312
+643,-18.96993488,0.476976007
+644,-19.03745481,0.475586712
+645,-19.10506153,0.474153176
+646,-19.17275904,0.472675299
+647,-19.24054717,0.471152896
+648,-19.30841739,0.469585681
+649,-19.37637788,0.467973571
+650,-19.44442848,0.466316349
+651,-19.5125606,0.464613797
+652,-19.58078249,0.462865765
+653,-19.64909397,0.461072102
+654,-19.71748642,0.459232527
+655,-19.78596811,0.457346955
+656,-19.85453888,0.45541517
+657,-19.92319007,0.453436958
+658,-19.99192998,0.451412166
+659,-20.06075846,0.44934068
+660,-20.13059937,0.447641286
+661,-20.20146579,0.446337148
+662,-20.27245647,0.445029966
+663,-20.34357572,0.44371981
+664,-20.41482356,0.442406667
+665,-20.48620002,0.441090593
+666,-20.55770079,0.439771563
+667,-20.62933454,0.438449659
+668,-20.70109264,0.43712481
+669,-20.77297508,0.435797106
+670,-20.84499057,0.434466558
+671,-20.91713044,0.4331332
+672,-20.98939906,0.431797031
+673,-21.06179645,0.430458073
+674,-21.13431825,0.429116336
+675,-21.20696885,0.427771889
+676,-21.27974828,0.426424718
+677,-21.35265655,0.42507488
+678,-21.42568928,0.423722318
+679,-21.49885089,0.422367134
+680,-21.5721414,0.421009348
+681,-21.64556084,0.419648948
+682,-21.71910478,0.418285948
+683,-21.79277768,0.416920379
+684,-21.86657957,0.415552296
+685,-21.94051045,0.414181687
+686,-22.01456589,0.412808567
+687,-22.08875036,0.411433
+688,-22.16306389,0.410054973
+689,-22.23750201,0.408674501
+690,-22.31207372,0.407291655
+691,-22.38677004,0.405906408
+692,-22.46159099,0.404518784
+693,-22.5365456,0.40312885
+694,-22.61162486,0.401736547
+695,-22.68683332,0.400342009
+696,-22.76217098,0.398945187
+697,-22.83763333,0.397546063
+698,-22.91322949,0.396144773
+699,-22.98895035,0.394741261
+700,-23.06479593,0.393335514
+
+'Demo_WavelengthMode_CF_PCRET.json' is the file I can change variables.
+{
+  "Settings" : {
+	  "ModeName"   : "wavelength",
+	  "Quantity"   : "Purcell",
+	  "DPos"	   : {
+		  "Cart"   : [0, 0, 80e-9]
+	  },
+	  "APos"	   : {
+		  "Cart"   : [0, 0, 80e-9]
+	  },
+	  "DOri"	   : {
+		  "Cart"   : [0, 0, 1]
+	  },
+	  "AOri"	   : {
+		  "Cart"   : [0, 0, 1]
+	  },
+	  "nmax"	   : 70,
+	  "BC"		   : "sphere",
+	  "rbc"		   : [70e-9],
+	  "Dpstrength" : 1
+    },
+  "tmp_set"	 : {
+	  "mode"	   : "Auto",
+	  "lambda_s"   : 300e-9,
+	  "lambda_e"   : 700e-9,
+	  "epsi0"	   : 1,
+	  "epsi1"	   : "./123/function/Ag_JPCL.csv",
+	  "epsi2"	   : ".\\InputFiles\\DielectricFunctions\\Ag_JPCL.csv"
+    },
+  "fplot"	 : {
+	  "colorstyle" : "-k",
+	  "range" 	   : [null,null,null,null],
+	  "yscale"     : "log",
+	  "xlabel"	   : "$\\mathrm{Wavenumber}~(\\mathrm{cm}^{-1})$",
+	  "ylabel"	   : "$\\mathrm{Coupling~Factor}~(\\mathrm{cm}^{-6})$",
+	  "subaxis"    : 1,
+	  "subrange"   : [null,null,null,null],
+	  "subxlabel"  : "$\\mathrm{Wavelength}~(\\mathrm{nm})$"
+    }	  
+}
+
+
+Fils about reading the csv file:
+def ReadDielectricFunction(filename):
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(filename)
+
+    # Perform the operation (second column + third column * 1i)
+    epsi = df.iloc[:, 1] + 1j * df.iloc[:, 2]
+
+    # wavelength
+    lambdaa = df.iloc[:, 0] * 1e-9  # meter
+
+    epsi = epsi.to_numpy(dtype=np.complex128)
+    lambdaa = lambdaa.to_numpy()    
+    
+    return lambdaa, epsi
+
+Function about reading json file and convert some notation to make them can 
+operate in python
+# Read the inputfile 
+# Input : 
+#    filename --- file.json
+
+import numpy as np
+import json
+from ReadDielectrcFunction import ReadDielectricFunction
+
+
+def read_settings(filename):
+    with open(filename, 'r') as file:
+        data = json.load(file)
+
+    # Extract data from the JSON
+    Settings = data['Settings']
+    tmp_set  = data['tmp_set']
+    fplot    = data['fplot']
+    
+    if tmp_set["epsi0"] == 1:
+        [lambda0, epsi0] = ReadDielectricFunction()
+    # Perform any post-processing or computations as needed
+    # Simulated dielectric function readings
+    lambda0 = ReadDielectricFunction(tmp_set['epsi0'])
+    lambda1 = ReadDielectricFunction(tmp_set['epsi1'])
+    lambda2 = ReadDielectricFunction(tmp_set['epsi2'])
+
+    # Perform further processing as needed for your specific application
+
+    # Construct the result dictionary
+    result = {
+        'Settings': settings,
+        'tmp_set': tmp_set,
+        'fplot': fplot,
+        # Add other computed data if needed
+    }
+
+    return result
+
+
+
+
+
+# Usage
+file_path = "./Demo_AngleMode_CF.json"
+# Now 'data' contains the contents of the JSON file
+
+My test Settings file, I will not use as I finish main.py
+import numpy as np
+import scipy.io as sio
+
+
+Settings1 = {
+    "ModeName"   : "wavelength",
+    "Quantity"   : "CF",
+
+    "nr"         : np.array([1,	1.349872708298668 + 0.990253984899622j], dtype=np.complex128),
+    "k0"         : 2.094395102393195e+07,
+    "k0s"        : np.array([1.256637061435917]) ,
+    "DPos"	     : {
+        "Cart"   : np.array([[0],
+                             [0],
+                             [80e-9]
+                             ]),
+        "Sph"    : np.array([[8.e-08],
+                             [0.e+00],
+                             [0.e+00]]),
+    },
+    "APos"	     : {
+        "Cart"   : np.array([[0],
+                             [0],
+                             [80e-9]]),
+    },
+    "DOri"	     : {
+        "Cart"   : np.array([[0],
+                             [0],
+                             [1]]),
+    },
+    "AOri"	     : {
+        "Cart"   : np.array([[0],
+                             [0],
+                             [1]]),
+        
+    },
+    "nmax"	     : 70,
+    "BC"         : "sphere",
+    "rbc"		 : 60e-9,
+    "Dpstrength" : 1,    
+}
+
+#sio.savemat('./Settings1.mat', mdict=Settings1)
+
+#print(Settings1["APos"])
+#print(Settings1["DRad"])
+#print(Settings1["nmax"])
+import numpy as np
+from C2S import C2S
+from VecTrans import VecTrans
+from NormTauPiP import NormTauPiP
+from SphBessel import SphBessel
+
+# Transforming Coordinate
+Settings1['DPos']['Sph'] = C2S(Settings1['DPos']['Cart'])
+Settings1['DOri']['Sph'] = VecTrans(Settings1['DOri']['Cart'], Settings1['DPos']['Sph'][1:3], 'C2S')
+
+    # Times of the 'for loop'
+Settings1['nn'] = Settings1['nr'].shape[0]
+
+# Coordinate Transformation
+Settings1['APos']['Sph']  = C2S(Settings1['APos']['Cart'])
+Settings1['AOri']['Sph']  = VecTrans(Settings1['AOri']['Cart'], Settings1['APos']['Sph'][1:3], 'C2S')
+Settings1['APos']['Sph2'] = C2S(Settings1['APos']['Cart'] - Settings1['DPos']['Cart'])
+
+# Angular Functions
+Settings1['DNAng'] = NormTauPiP(Settings1['nmax'], Settings1['DPos']['Sph'][1], 'reversed')
+Settings1['ANAng'] = NormTauPiP(Settings1['nmax'], Settings1['APos']['Sph'][1], 'normal')
+
+# Radial Functions
+rhoD = Settings1['nr'][0] * Settings1['k0'] * Settings1['DPos']['Sph'][0]
+Settings1['DRad'] = SphBessel(rhoD, Settings1['nmax'], 1, 'hankel1') 
+
+
+Settings = Settings1 
+#print(Settings)
+#print(Settings['DRad'])
+#print(rhoD)
+
+The Functions that still have problem:
+import numpy as np
+from Settings1 import Settings  # Assuming Settings1 is the module containing the Settings dictionary
+from NormTauPiP import NormTauPiP
+from SourCoeff import SourCoeff
+from MieSingle import MieSingle
+from VectSphFunc import VectSphFunc
+from SphBessel import SphBessel
+
+
+def SingleGR0(Settings):
+    # Variables
+    nmax = Settings['nmax']
+    rhoD = Settings['nr'][0] * Settings['k0'] * Settings['DPos']['Sph'][0]
+    
+    # Radial Functions for Donor
+    if 'DRad' not in Settings:
+        Settings['DRad'] = SphBessel(rhoD, nmax, 1, 'hankel1')
+    
+    # Angular Functions
+    if 'DNAng' not in Settings:
+        Settings['DNAng'] = NormTauPiP(nmax, Settings['DPos']['Sph'][1], 'reversed')
+    
+    if 'DNAngN' not in Settings:
+        Settings['DNAngN'] = NormTauPiP(nmax, Settings['DPos']['Sph'][1], 'normal')
+    
+    # Mie Coefficients
+    if 'Source' not in Settings:
+        Settings['Source'] = SourCoeff(Settings, "Green's function only")
+    
+    if 'Layer0' not in Settings:
+        if Settings['BC'] == 'sphere':
+            Settings['Layer0'] = MieSingle(Settings['nr'], Settings['k0s'], nmax)
+        elif Settings['BC'] == 'coreshell':
+            Settings['Layer0'] = "error" #MieCoreShell(Settings['nr'], Settings['k0s'], nmax)
+        
+        Settings['Layer0']['a'] = np.transpose(Settings['Layer0']['alpha']).reshape((1, nmax)) @ Settings['Source']['p']  
+        Settings['Layer0']['b'] = np.transpose(Settings['Layer0']['beta']).reshape((1, nmax)) @ Settings['Source']['q']  
+    # Azimuthal Functions
+    if 'emphi' not in Settings:
+        emphi = np.sqrt(1 / (2 * np.pi))
+    
+    # Generating M and N Fields
+    Temp = {}
+    Temp['DVSF'] = VectSphFunc(rhoD, nmax, Settings['DRad'], Settings['DNAngN'], emphi)
+    
+    #print(np.sum(Temp['DVSF']['M'] * Settings['Layer0']['b'], axis=(0, 1)))
+    # Summing All orders of the Scattering Field
+    Temp['Layer0M'] = np.reshape(np.sum(Temp['DVSF']['M'] * Settings['Layer0']['b'].conj().T, axis=(0, 1)), (3, 1))
+    Temp['Layer0N'] = np.reshape(np.sum(Temp['DVSF']['N'] * Settings['Layer0']['a'].conj().T, axis=(0, 1)), (3, 1))
+    print(Temp['DVSF']['M'].size)
+    print(Temp['DVSF']['N'].size)
+
+    #print(Temp['Layer0M'])
+    #print(Temp['Layer0N'])
+
+    # Scattering Part at the Donor Position
+    Output = {}
+    Output['EScat'] = Temp['Layer0M'] + Temp['Layer0N']
+    
+    # DOri.ImG.Dori
+    Output['ImG'] = Settings['k0'] / 6 / np.pi + np.imag(np.transpose(Output['EScat']) * Settings['DOri']['Sph'])
+    
+    # Purcell Factor
+    Output['Purcell'] = 6 * np.pi / Settings['k0'] * Output['ImG']
+    
+    return Output
+
+print(SingleGR0(Settings))
+
+import numpy as np
+import numpy as np
+from NormTauPiP import NormTauPiP
+from SourCoeff import SourCoeff
+from MieSingle import MieSingle
+from VectSphFunc import VectSphFunc
+from SphBessel import SphBessel
+from Settings1 import Settings
+
+def SingleGR1(settings):
+    nmax = settings['nmax']
+    rhoD = settings['nr'][1] * settings['k0'] * settings['DPos']['Sph'][0]
+
+    # Radial Functions for Donor
+    if 'DRad' not in settings:
+        settings['DRad'] = SphBessel(rhoD, nmax, 1, 'bessel')
+
+    # Angular Functions
+    if 'DNAng' not in settings:
+        settings['DNAng'] = NormTauPiP(nmax, settings['DPos']['Sph'][1], 'reversed')
+
+    if 'DNAngN' not in settings:
+        settings['DNAngN'] = NormTauPiP(nmax, settings['DPos']['Sph'][1], 'normal')
+
+    # Mie Coefficients
+    if 'Source' not in settings:
+        settings['Source'] = SourCoeff(settings, "Green's function only")
+
+    if 'Layer1' not in settings:
+        if settings['BC'] == 'sphere':
+            settings['Layer1'] = MieSingle(settings['nr'], settings['k0s'], nmax)
+        elif settings['BC'] == 'coreshell':
+            settings['Layer1'] = "error" #MieCoreShell(settings['nr'], settings['k0s'], nmax)
+        elif settings['BC'] == 'simplecavity':
+            settings['Layer1'] = "error" #MieSimCav(settings['nr'], settings['k0s'], nmax)
+        
+        print(Settings['Source']['r'].shape)
+        print(Settings['Source']['s'].shape)
+
+        print(Settings['Layer1']['delta'].shape)
+        print(Settings['Layer1']['gamma'].shape)
+
+        #settings['Layer1']['d'] = settings['Source']['r'] * np.transpose(settings['Layer1']['delta'])
+        #settings['Layer1']['c'] = settings['Source']['s'] * np.transpose(settings['Layer1']['gamma'])
+        settings['Layer1']['d'] = np.einsum('i,j->ij', settings['Source']['r'].T, settings['Layer1']['delta'])
+        settings['Layer1']['c'] = np.einsum('i,j->i', settings['Source']['s'].T, settings['Layer1']['gamma'])
+
+
+    # Azimuthal Functions
+    if 'emphi' not in settings:
+        emphi = np.sqrt(1/(2*np.pi))
+
+    # Generating M and N Fields
+    temp_dvsf = VectSphFunc(rhoD, nmax, settings['DRad'], settings['DNAngN'], emphi)
+
+    # Summing All order of the Scattering Field
+    temp_layer0m = np.sum(temp_dvsf['M'] * settings['Layer1']['c'], axis=(1, 2)).reshape((3, 1))
+    temp_layer0n = np.sum(temp_dvsf['N'] * settings['Layer1']['d'], axis=(1, 2)).reshape((3, 1))
+
+    # Scattering Part at the Donor Position
+    output_escat = temp_layer0m + temp_layer0n
+
+    # DOri.ImG.Dori
+    output_img = settings['k0']/(6*np.pi) + np.imag(np.transpose(output_escat) @ settings['DOri']['Sph'])
+
+    # Purcell Factor
+    output_purcell = (6*np.pi/settings['k0']) * output_img
+
+    return {'EScat': output_escat, 'ImG': output_img, 'Purcell': output_purcell}
+
+print(SingleGR1(Settings))
+
+## Mie Coefficient for A Dipole Source (cgs unit)
+# Inputs  : Settings --- calculation parameter
+#            .nmax   --- maximun expansion order
+#            .nr     --- relative refractive index
+#            .k0     --- modulus of wavevector in vacuum
+#            .DPos   --- donor position
+#            .Sph    --- presented in a spherical coordinate
+#           Rad      --- set of radial functions
+#            .h1     --- spherical bessel functions
+#            .raddxi --- dxi/kr
+#           NAng     --- normalized Tau, Pi, and P functions
+#            .NTau   --- normalized Tau array
+#            .NPi    --- normalized Pi array
+#            .NP     --- normalized P array
+# Outputs : Source   --- source expansion coefficients
+#            .p      --- coefficient p
+#            .q      --- coefficient q
+
+#import Settings1
+import numpy as np
+#import pandas as pd
+#import Inputfile as i
+from SphBessel import SphBessel
+#import NormTauPiP
+from VectSphFunc import VectSphFunc
+from TenCont import TenCont
+
+#Settings = {
+ #   "nmax"	     : 30,
+  #  "nr"         : 1,
+   # "k0"         : 1.551403779550515e+07,
+   # "k0s"        : 1.551403779550515e+07 * 70e-8 ,
+#    "DPos"	     : {
+#        "Cart"   : np.array([[0],
+#                             [0],
+#                             [80e-9]
+#                             ]),
+#        "Sph"    : np.array([[8.e-08],
+#                             [0.e+00],
+#                             [0.e+00]])
+#    },
+#}
+
+
+#kr    = 1
+#nmax  = 1
+#array = 1
+#type  = 'bessel'
+#theta = 0
+#order = 'reversed'
+#Rad   = SphBessel.SphBessel(Settings1.Settings1['k0s'], Settings1.Settings1['nmax'], array = 1, type = 'hankel')
+#NAng  = NormTauPiP.NormTauPiP(Settings1.Settings1['nmax'], theta, order)
+#print(Rad)
+#print(NAng)
+
+def SourCoeff(Settings, type):
+    # Variables
+    nmax = Settings['nmax']
+    
+    # Define the refractive index where the source is located to "ni"
+    if Settings['BC'] == 'simplecavity':
+        ni = Settings['nr'][1]
+    else:
+        ni = Settings['nr'][0]
+    
+    kr = ni * Settings['k0'] * Settings['DPos']['Sph'][0]
+    
+    # Preallocation
+    m = -np.inf * np.ones((nmax, 2 * nmax + 1), dtype=int)
+    
+    # Generate Azimuthal Function
+    for ii in range(1, nmax + 1):
+        m[ii - 1, 0:2 * ii + 1] = np.arange(ii, -ii - 1, -1)
+    
+    if Settings['DPos']['Sph'][2] == 0:
+        # For Speed-Up
+        emphi = np.sqrt(1 / (2 * np.pi))
+    else:
+        m_exp = np.exp(1j * m * Settings['DPos']['Sph'][2])
+        m_exp[np.isnan(m_exp)] = 0
+        emphi = np.sqrt(1 / (2 * np.pi)) * m_exp
+    
+    # Generate N and M Functions
+    kr  = ni * Settings['k0'] * Settings['DPos']['Sph'][0]
+    
+    VSF = VectSphFunc(kr, nmax, Settings['DRad'], Settings['DNAng'], emphi)
+    
+    # Calculate Prefactor
+    if type == "Green's function only":
+        prefactor = 1j * (ni * Settings['k0']) * (-1) ** m
+    elif type == 'dipole':
+        # Prefactor from the Green's Function and a Dipole (Gaussian Unit)
+        prefactor = 4 * np.pi * 1j * (ni * Settings['k0']) ** 3 * (-1) ** m
+    
+    # Output
+    Source = {}
+    if Settings['DPos']['Cart'][2,:] > Settings['rbc']: #Settings['BC'] == 'simplecavity':
+        Source['r'] = prefactor * TenCont(VSF['N'], Settings['DOri']['Sph'], [2, 0])
+        Source['s'] = prefactor * TenCont(VSF['M'], Settings['DOri']['Sph'], [2, 0])
+    else:
+        Source['p'] = prefactor * TenCont(VSF['N'], Settings['DOri']['Sph'], [2, 0])
+        Source['q'] = prefactor * TenCont(VSF['M'], Settings['DOri']['Sph'], [2, 0])
+    
+    return Source
+
+
+from Settings1 import Settings
+#print(Settings)
+print(SourCoeff(Settings, type="Green's function only"))
+
+Ok, that's all, and plz keep those function in mind. This maka you can debug first 
+before give me the result code.
+
+ 

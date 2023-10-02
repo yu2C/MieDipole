@@ -5,7 +5,7 @@ from Interpolation import Interpolation
 import scipy.io as sio
 
 
-def read_settings(filename):
+def ReadSettings(filename):
     # Initialization
     error_msg = False
     result    = {}
@@ -39,9 +39,16 @@ def read_settings(filename):
                     fplot['subrange'][i] = float('inf')
     fplot['subrange'] = np.array(fplot['subrange'])
     '''
-
-
-
+    # Convert list to array
+    DPos_Cart = Settings["DPos"]["Cart"]
+    #DPos_Cart_column = DPos_Cart.reshape()
+    Settings["DPos"]["Cart"] = np.array(DPos_Cart).reshape(-1, 1)
+    APos_Cart = Settings["APos"]["Cart"]
+    Settings["APos"]["Cart"] = np.array(APos_Cart).reshape(-1, 1)
+    DOri_Cart = Settings["DOri"]["Cart"]
+    Settings["DOri"]["Cart"] = np.array(DOri_Cart).reshape(-1, 1)
+    AOri_Cart = Settings["AOri"]["Cart"]
+    Settings["AOri"]["Cart"] = np.array(AOri_Cart).reshape(-1, 1)
 
     # Verify the assignments of dielectric function
     if 'epsi0' in tmp_set:
@@ -152,9 +159,9 @@ def read_settings(filename):
 
 
     result = {
-        "Settings_py": Settings,
+        "Settings": Settings,
         #"fplot": fplot,
-        "error_msg_py": error_msg
+        "error_msg": error_msg
     }
     
     
@@ -165,8 +172,8 @@ def read_settings(filename):
 
 
 # Usage example
-filename = './123/function/Demo_WavelengthMode_CF_PCRET.json'  # Update with your file path
-result = read_settings(filename)
-#print(type(result))
+#filename = './123/function/Demo_WavelengthMode_CF_PCRET.json'  # Update with your file path
+#result = ReadSettings(filename)
+#print(result)
 
 #sio.savemat('./ReadSettings_py.mat', mdict=result)

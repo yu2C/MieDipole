@@ -324,3 +324,9 @@ plt.xlim(2, -2)
 plt.ylim(2, -2)
 # Show the plot
 plt.show()
+
+A = {'kr_real_meshpy': kr_real_mesh, 'kr_imag_meshpy': kr_imag_mesh, 'j1_real_valuespy':j1_real_values}
+import scipy.io as sio
+filename = f'./benchmark_of_SphBessel_py_3d_j1.mat'
+sio.savemat(filename, mdict=A)
+print(f'benchmark_of_SphBessel_py_3d_j1 saved to {filename}')

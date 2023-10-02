@@ -6,7 +6,7 @@ import scipy.io as sio
 import json
 import os
 
-
+'''
 json_file = ('./123/function/Demo_WavelengthMode_CF_PCRET.json')
 
 with open(json_file) as json_data:
@@ -21,3 +21,24 @@ print(os.getcwd())
 
 A = np.zeros((1, 2))
 print(A)
+'''
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Generate x values from 0 to 100
+x = np.arange(0, 101)  # Values from 0 to 100
+
+# Calculate y based on the given formula
+#y = np.sqrt((2 * x + 1) / 8)
+y = np.sqrt((2 * x + 1) / (2 * x * (x + 1)))
+
+# Plot x and y
+plt.plot(x, y)
+plt.xlabel('indn')
+plt.ylabel('sqrt((2 * indn + 1) / 8)')
+plt.title('Plot of sqrt((2 * indn + 1) / 8) vs. indn')
+plt.xlim(0, 100)
+#plt.ylim(0, 5.5)
+plt.grid(True)
+plt.show()

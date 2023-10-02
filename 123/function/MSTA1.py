@@ -37,4 +37,4 @@ def MSTA1(z, mp):
     
     return nn
 
-print(MSTA1(1+1j, 200))
+#print(MSTA1(1+1j, 200))

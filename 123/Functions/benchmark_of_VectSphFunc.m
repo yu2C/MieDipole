@@ -1,0 +1,68 @@
+function VSF = benchmark_of_VectSphFunc(kr, nmax)
+    % NAng
+    theta = pi/4;  % parameter
+    order = 'normal';  % parameter
+    NAng = NormTauPiP(nmax, theta, order);
+
+    % Rad
+    array = 1;  % parameter
+    type = 'bessel';  % parameter
+    Rad = SphBessel(kr, nmax, array, type);
+
+    % Preallocation
+    VSF_M = zeros(nmax, 2 * nmax + 1, 3) ;
+    VSF_N = zeros(nmax, 2 * nmax + 1, 3) ;
+
+    % Preallocation
+    m = -inf * ones(nmax, 2 * nmax + 1);
+
+
+ 
+        % Generate Azimuthal Function
+    for ii = 1:nmax
+            m(ii,1:2*ii+1) = ii:-1:-ii;
+    end
+    %if Settings.DPos.Sph(3) == 0
+        % For Speed-Up
+        emphi = sqrt(1/2/pi);
+    %else
+    %    emphi = sqrt(1/2/pi)*exp(1i*m*Settings.DPos.Sph(3));
+    %    emphi(isnan(emphi)) = 0;
+    %end
+
+    % Extract Radial Functions
+    if isfield(Rad, 'h1')
+        z1 = Rad.h1;
+    elseif isfield(Rad, 'j1')
+        z1 = Rad.j1;
+    end
+
+    if isfield(Rad, 'raddxi')
+        raddz = Rad.raddxi;
+    elseif isfield(Rad, 'raddpsi')
+        raddz = Rad.raddpsi;
+    end
+
+    % Construct the Array of Each Order
+    n = (1:nmax)';
+
+    % Construct Radz (j_n(kr)/kr)
+    if kr == 0
+        Radz = zeros(1, nmax);
+        Radz(1) = 1/3;
+    else
+        Radz = transpose(z1) / kr;
+    end
+
+    % M Field
+    VSF_M(:, :, 2) = 1i .* transpose(z1) .* NAng.NPi .* emphi;
+    VSF_M(:, :, 3) = -transpose(z1) .* NAng.NTau .* emphi;
+    %A = Radz .* n .* (n + 1);
+    % N Field
+    VSF_N(:, :, 1) = Radz .* n .* (n + 1) .*  NAng.NP .* emphi;
+    VSF_N(:, :, 2) = transpose(raddz) .* NAng.NTau .* emphi;
+    VSF_N(:, :, 3) = 1i .* transpose(raddz) .* NAng.NPi .* emphi;
+
+    VSF = struct('M', VSF_M, 'N', VSF_N);
+    % save('VectSphFunc.mat', 'VSF');
+end

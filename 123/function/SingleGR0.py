@@ -63,4 +63,4 @@ def SingleGR0(Settings):
     
     return Output
 
-print(SingleGR0(Settings1.Settings1))
+#print(SingleGR0(Settings1.Settings1))
