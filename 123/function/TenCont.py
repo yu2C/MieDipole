@@ -14,7 +14,7 @@ def TenCont(A, B, dim):
         return None
 
     # Size of the target column
-    sizetar = max(sizeB)
+    sizetar = np.max(sizeB)
 
     # Check for illegal operation
     if np.sum(sizeB) > sizetar + 1:

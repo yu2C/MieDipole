@@ -21,10 +21,10 @@
 import numpy as np
 #import pandas as pd
 #import Inputfile as i
-from SphBessel import SphBessel
+from SphBessel   import SphBessel
 #import NormTauPiP
 from VectSphFunc import VectSphFunc
-from TenCont import TenCont
+from TenCont_v1  import TenCont
 
 #Settings = {
  #   "nmax"	     : 30,
@@ -65,7 +65,16 @@ def SourCoeff(Settings, type):
         ni = Settings['nr'][0]
     
     kr = ni * Settings['k0'] * Settings['DPos']['Sph'][0]
-    
+    print('SourCoeff kr')
+    print(kr)
+    print('SourCoeff ni')
+    print(ni)    
+    print("SourCoeff Settings['nr'][0]")
+    print(Settings['nr'][0])
+    print("SourCoeff Settings['k0']")
+    print(Settings['k0'])
+    print("SourCoeff Settings['nr']")
+    print(Settings['nr'])   
     # Preallocation
     m = -np.inf * np.ones((nmax, 2 * nmax + 1), dtype=int)
     
@@ -82,7 +91,6 @@ def SourCoeff(Settings, type):
         emphi = np.sqrt(1 / (2 * np.pi)) * m_exp
     
     # Generate N and M Functions
-    kr  = ni * Settings['k0'] * Settings['DPos']['Sph'][0]
     
     VSF = VectSphFunc(kr, nmax, Settings['DRad'], Settings['DNAng'], emphi)
     

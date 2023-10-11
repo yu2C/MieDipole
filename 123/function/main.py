@@ -1,14 +1,16 @@
 import numpy as np
 import sys
 import json
-from Settings1 import Settings
+#from Settings1 import Settings
 from ReadSettings_v1 import ReadSettings
-from SingleGR0_v1 import SingleGR0
-from datetime import datetime
-from C2S import C2S
-from VecTrans import VecTrans
-from NormTauPiP import NormTauPiP
-from SphBessel import SphBessel
+from SingleGR0_v1    import SingleGR0
+from datetime        import datetime
+from C2S             import C2S
+from VecTrans        import VecTrans
+from NormTauPiP      import NormTauPiP
+from SphBessel       import SphBessel
+from TwoGR0          import TwoGR0
+from TwoGR1          import TwoGR1
 
 ###########################################################################
 ## Start the Program
@@ -31,13 +33,20 @@ Inputfile = ReadSettings(f'{FilePath}{FileName}.json')
 
 Settings = Inputfile['Settings']
 #print(Settings)
+#print("Settings['nr']")
+#print(Settings['nr'])
 #fplot = Inputfile['fplot']
 
 if Settings['ModeName'] == 'wavelength':
-    k0 = Settings['k0']
+    k0  = Settings['k0']
+    k0  = np.array(k0)
     k0s = Settings['k0s']
+    k0s = np.array(k0s)
     lambda_val = Settings['lambda']
-    nr = Settings['nr']
+    nr  = Settings['nr']
+    nr  = np.array(nr)
+    #print(Settings['k0s'])
+    #print(k0s)
 elif Settings['ModeName'] == 'angle':
     Ar = Settings['APos']['Sph'][0][0]
     Atheta = Settings['APos']['Sph'][1]
@@ -57,6 +66,18 @@ print("Using Structure:", Settings["BC"])
 ############################################################################
 ## Check the input is correct
 
+if Settings['BC'] == 'simplecavity':
+    if np.linalg.norm(Settings['DPos']['Cart']) >= Settings['rbc']:
+        raise ValueError('Error: The donor dipole should be inside the cavity.')
+        
+elif Settings['BC'] == 'sphere':
+    if np.linalg.norm(Settings['DPos']['Cart']) <= Settings['rbc']:
+        raise ValueError('Error: The donor dipole should be outside the sphere.')
+        
+elif Settings['BC'] == 'coreshell':
+    if np.linalg.norm(Settings['DPos']['Cart']) <= Settings['rbc'][0]:
+        raise ValueError('Error: The donor dipole should be outside the shell.')
+
 ############################################################################
 ############################################################################
 ## Pre-Processing
@@ -65,8 +86,13 @@ print("Using Structure:", Settings["BC"])
 Settings['DPos']['Sph'] = C2S(Settings['DPos']['Cart'])
 Settings['DOri']['Sph'] = VecTrans(Settings['DOri']['Cart'], Settings['DPos']['Sph'][1:3], 'C2S')
 
-    # Times of the 'for loop'
+
+# Times of the 'for loop'
 Settings['nn'] = Settings['nr'].shape[0]
+#print("Main Settings['nn']")
+#print(Settings['nn'])
+#print("Main Settings['nr']")
+#print(Settings['nr'].shape)
 
 # Coordinate Transformation
 Settings['APos']['Sph']  = C2S(Settings['APos']['Cart'])
@@ -85,15 +111,15 @@ Settings['ANAng'] = NormTauPiP(Settings['nmax'], Settings['APos']['Sph'][1], 'no
 ############################################################################
 ## Preallocation
 if Settings['ModeName'] == 'wavelength':
-    EScat = np.zeros((Settings['nn'], 3))
-    ImG = np.zeros(Settings['nn'])
+    EScat    = np.zeros((Settings['nn'], 3))
+    ImG      = np.zeros((Settings['nn'], 1))
     if not np.array_equal(Settings['APos']['Cart'], Settings['DPos']['Cart']):
         ImG_vec = np.zeros((Settings['nn'], 3))
-    Purcell = np.zeros(Settings['nn'])
+    Purcell  = np.zeros((Settings['nn'], 1))
 else:
-    Etot = np.zeros((Settings['nn'], 3))
+    Etot     = np.zeros((Settings['nn'], 3))
     NormEtot = np.zeros((Settings['nn'], 3))
-    Edip = np.zeros((Settings['nn'], 3))
+    Edip     = np.zeros((Settings['nn'], 3))
 
 #print(Settings)
 ############################################################################
@@ -101,11 +127,19 @@ else:
 ## Main Loop
 if Settings['ModeName'] == 'wavelength':
     for ii in range(Settings['nn']):
-        Settings['k0'] = k0[ii]
-        Settings['nr'] = nr[ii, :]
-        Settings['k0s'] = k0s[ii]
+        Settings['k0']  = k0[ii] # variable
+        Settings['nr']  = np.array(nr[ii, :], dtype=np.complex128)
+        #Settings['nr']  = Settings['nr'].reshape((1, 2))
+        Settings['k0s'] = np.array([k0s[ii]])
         #print(Settings['nr'])
-
+        #print("Settings['k0s']")
+        #print(Settings['k0s'])
+        #print("=============================")
+        #print('k0')
+        #print("main Settings['k0']")
+        #print(Settings['k0'])
+        #print("main Settings['nr']")
+        #print(Settings['nr'])
         # Determine which function is called by the acceptor position
         if np.array_equal(Settings['APos']['Cart'], Settings['DPos']['Cart']):
             if Settings['BC'] == 'simplecavity':
@@ -114,17 +148,17 @@ if Settings['ModeName'] == 'wavelength':
                 Output = SingleGR0(Settings)
 
             EScat[ii, :] = Output['EScat'].T
-            ImG[ii] = Output['ImG'].T
-            Purcell[ii] = Output['Purcell'].T
+            ImG[ii]      = Output['ImG'].T
+            Purcell[ii]  = Output['Purcell'].T
         else:
             if Settings['APos']['Sph'][0] >= Settings['rbc'][0]:
-                Output = "error" #TwoGR0(Settings)
+                Output = TwoGR0(Settings)
             else:
-                Output = "error" #TwoGR1(Settings)
+                Output = TwoGR1(Settings)
 
-            ImG_vec[ii, :] = np.imag(Output['G']).T
-            Etot[ii, :] = Output['Etot'].T
-            Edip[ii, :] = Output['Edip'].T
+            ImG_vec[ii, :]  = np.imag(Output['G']).T
+            Etot[ii, :]     = Output['Etot'].T
+            Edip[ii, :]     = Output['Edip'].T
             NormEtot[ii, :] = Output['NEtot'].T
 
         # Information

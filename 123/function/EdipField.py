@@ -44,6 +44,19 @@ def EdipField(nr, k, rdip, vdip):
     return EdipS
 
 '''
+nr = 1
+k  = 2.094395102393195e+07
+rdip = np.array([[1.300000000000000e-07],
+                 [3.141592653589793],
+                 [0.]
+                 ])
+vdip = np.array([[1],
+                 [0],
+                 [0]
+                 ])
+print(EdipField(nr, k, rdip, vdip))
+'''
+'''
 A = np.array([[1.0],
               [1.0],
               [1.0]

@@ -12,26 +12,26 @@ Settings1 = {
     "DPos"	     : {
         "Cart"   : np.array([[0],
                              [0],
-                             [80e-9]
+                             [65e-9]
                              ]),
-        "Sph"    : np.array([[8.e-08],
+        "Sph111"    : np.array([[8.e-08],
                              [0.e+00],
                              [0.e+00]]),
     },
     "APos"	     : {
         "Cart"   : np.array([[0],
                              [0],
-                             [80e-9]]),
+                             [-65e-9]]),
     },
     "DOri"	     : {
-        "Cart"   : np.array([[0],
+        "Cart"   : np.array([[1],
                              [0],
-                             [1]]),
+                             [0]]),
     },
     "AOri"	     : {
-        "Cart"   : np.array([[0],
+        "Cart"   : np.array([[1],
                              [0],
-                             [1]]),
+                             [0]]),
         
     },
     "nmax"	     : 70,
@@ -76,6 +76,8 @@ Settings = Settings1
 #print(Settings)
 #print(Settings['DRad'])
 #print(rhoD)
+'''
 filename = f'./Settings_VSF.mat'
 sio.savemat(filename, mdict={'Settings': Settings})
 print(f'Settings_VSF saved to {filename}')
+'''

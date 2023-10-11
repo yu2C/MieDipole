@@ -17,12 +17,17 @@ from SphBessel import SphBessel
 #import Settings1
 
 def MieSingle(nr, ks, nmax):
-    try:
-        if len(nr) != 2 or len(ks) != 1:
-            raise ValueError("Error input size of 'nr' or 'ks' from 'MieSingle'")
-    except TypeError:
-        print("Error: 'ks' should be a list or array with one element.")
-        return None
+    # check the inputs
+    #print('Mie Single ks :')
+    #print(ks)
+    #print('Mie Single nr :')
+    #print(nr)
+
+    # Assuming nr and ks are numpy arrays
+    if np.max(nr.shape) != 2 or np.max(ks.shape) != 1:
+        errmes = 'Error input size of "nr" or "ks" from "MieSingle"'
+        print(f"{errmes}")
+
     
     n0, n1 = nr
     n0kr1, n1kr1 = n0 * ks[0], n1 * ks[0]

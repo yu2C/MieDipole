@@ -23,6 +23,7 @@ A = np.zeros((1, 2))
 print(A)
 '''
 
+'''
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -42,3 +43,16 @@ plt.xlim(0, 100)
 #plt.ylim(0, 5.5)
 plt.grid(True)
 plt.show()
+'''
+
+'''
+A = np.array([1, 2])
+B = np.array([[1, 2]])
+print(A[0])
+print(B[0])
+'''
+
+A = np.zeros((2, 5, 3))
+print(A)
+A[:, :, 1] = 1
+print(A)

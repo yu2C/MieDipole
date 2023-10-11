@@ -2,17 +2,31 @@
 import numpy as np
 
 def S2S(S2, S1t, S1p):
+    if isinstance(S1t, (np.ndarray, list)):
+        S1t = S1t[0]
+
+    if isinstance(S1p, (np.ndarray, list)):
+        S1p = S1p[0]
+
+
     cost = np.cos(S1t)
     sint = np.sin(S1t)
     cosp = np.cos(S1p)
-    
+    #print("S2S cost : ")
+    #print(cost)
+    #print("S2S sint : ")
+    #print(sint)
+    #print("S2S cosp : ")
+    #print(cosp)
     # Rotation matrix
     T = np.array([
-        [cost, -sint, 0   ],
-        [sint, cost , 0   ],
-        [0   , 0    , cosp]
+        [cost, -sint,    0],
+        [sint,  cost,    0],
+        [   0,     0, cosp]
         ]) 
     
+    #print("S2S T : ")
+    #print(T)
     # Perform the coordinate transformation
     S1 = np.dot(T, S2)
     

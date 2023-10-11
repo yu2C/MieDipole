@@ -15,8 +15,8 @@ def ReadSettings(filename):
 
     # Rename
     Settings = input_data['Settings']
-    tmp_set = input_data['tmp_set']
-    fplot = input_data['fplot']
+    tmp_set  = input_data['tmp_set']
+    fplot    = input_data['fplot']
     '''
     # Post-processing for range and subrange
     if 'range' in fplot:
@@ -107,6 +107,8 @@ def ReadSettings(filename):
             nr = np.zeros((len(lambdaa), 2), dtype=np.complex128)
             nr[:, 0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
             nr[:, 1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
+            #print('ReadSettings nr :')
+            #print(nr.shape)
         elif Settings['BC'] == 'coreshell':
             # Choose the appropriate lambda based on availability
             if len(lambda0) > 0:
@@ -156,6 +158,8 @@ def ReadSettings(filename):
     Settings['nr']     = nr
     Settings['rbc']    = np.transpose(Settings['rbc'])
     Settings['k0s']    = Settings['k0'] * Settings['rbc']
+    #print("Settings['k0s'] :")
+    #print(Settings['k0s'].shape)
 
 
     result = {

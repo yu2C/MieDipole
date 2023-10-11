@@ -31,8 +31,12 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     #Rad   = SphBessel.Rad(kr, nmax, array, type)
     #NAng  = NormTauPiP.NAng(nmax, theta, order)
     # Preallocation
-    VSF_M = np.zeros((nmax, 2 * nmax + 1, 3), dtype=complex)
-    VSF_N = np.zeros((nmax, 2 * nmax + 1, 3), dtype=complex)
+    VSF = {
+        'M' : np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128),
+        'N' : np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128)
+    }
+    #VSF_M = np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128)
+    #VSF_N = np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128)
     
     # Extract Radial Functions
     if   'h1' in Rad:
@@ -50,21 +54,31 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     
     # Construct Radz (j_n(kr)/kr)
     if kr == 0:
-        Radz = np.zeros(nmax, 1)
+        Radz = np.zeros((nmax, ))
         Radz[0] = 1/3
     else:
-        Radz = np.transpose(z1) / kr
+        Radz = z1 / kr
+    
+    print("VSF z1 : ")
+    print(z1.shape)
+    print("VSF Radz : ")
+    print(Radz.shape)
+    print("VSF raddz : ")
+    print(raddz.shape)
+    print("VSF NAng['NPi'] : ")
+    print(NAng['NPi'].shape)
+    print("VSF n : ")
+    print(n.shape)
     
     # M Field
-    VSF_M[:, :, 1] = 1j * np.transpose(z1) @ NAng['NPi'] * emphi
-    VSF_M[:, :, 2] = -np.transpose(z1) @ NAng['NTau'] * emphi
+    VSF['M'][:, :, 1] = 1j * np.einsum('i,ij->ij', z1, NAng['NPi']) * emphi
+    VSF['M'][:, :, 2] = -np.einsum('i,ij->ij', z1, NAng['NTau']) * emphi
     
     # N Field
-    VSF_N[:, :, 0] =  n * (n + 1) * Radz @ NAng['NP'] * emphi
-    VSF_N[:, :, 1] = np.transpose(raddz) @ NAng['NTau'] * emphi
-    VSF_N[:, :, 2] = 1j * np.transpose(raddz) @ NAng['NPi'] * emphi
+    VSF['N'][:, :, 0] = np.einsum('i,ij->ij', Radz*n*(n+1), NAng['NP']) * emphi
+    VSF['N'][:, :, 1] = np.einsum('i,ij->ij', raddz, NAng['NTau']) * emphi
+    VSF['N'][:, :, 2] = 1j * np.einsum('i,ij->ij', raddz, NAng['NPi']) * emphi
     
-    VSF = {'M': VSF_M, 'N': VSF_N}
     #sio.savemat('./VectSphFunc.mat', mdict=VSF)
     return VSF
 

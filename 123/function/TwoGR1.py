@@ -123,4 +123,5 @@ def TwoGR1(settings):
         'NEtot': output_ne_tot
     }
 
-print(TwoGR1(Settings))
+#print(TwoGR1(Settings))
+
