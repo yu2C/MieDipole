@@ -30,13 +30,13 @@ NAng  = NormTauPiP.NormTauPiP(nmax, theta, order)
 def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     #Rad   = SphBessel.Rad(kr, nmax, array, type)
     #NAng  = NormTauPiP.NAng(nmax, theta, order)
+    #sio.savemat('./VectSphFunc_Rad.mat', mdict=Rad)
+    
     # Preallocation
     VSF = {
         'M' : np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128),
         'N' : np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128)
     }
-    #VSF_M = np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128)
-    #VSF_N = np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128)
     
     # Extract Radial Functions
     if   'h1' in Rad:
@@ -54,21 +54,21 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     
     # Construct Radz (j_n(kr)/kr)
     if kr == 0:
-        Radz = np.zeros((nmax, ))
+        Radz    = np.zeros((nmax, ))
         Radz[0] = 1/3
     else:
-        Radz = z1 / kr
+        Radz    = z1 / kr
     
-    print("VSF z1 : ")
-    print(z1.shape)
-    print("VSF Radz : ")
-    print(Radz.shape)
-    print("VSF raddz : ")
-    print(raddz.shape)
-    print("VSF NAng['NPi'] : ")
-    print(NAng['NPi'].shape)
-    print("VSF n : ")
-    print(n.shape)
+    #print("VSF z1 : ")
+    #print(z1.shape)
+    #print("VSF Radz : ")
+    #print(Radz.shape)
+    #print("VSF raddz : ")
+    #print(raddz.shape)
+    #print("VSF NAng['NPi'] : ")
+    #print(NAng['NPi'].shape)
+    #print("VSF n : ")
+    #print(n.shape)
     
     # M Field
     VSF['M'][:, :, 1] = 1j * np.einsum('i,ij->ij', z1, NAng['NPi']) * emphi

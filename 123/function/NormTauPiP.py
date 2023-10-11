@@ -19,7 +19,7 @@ def Wigner_d(j, theta):
     J = np.diag(np.sqrt((j - m) * (j + m + 1)), k=-1)
     
     # Create the Spectral Decomposition Matrix J_y at z Representation
-    Jy = (J - J.T) / (2j)
+    Jy = (J - J.conj().T) / (2j)
     
     # Diagonalization
     D, V = np.linalg.eig(Jy)
@@ -59,20 +59,20 @@ def NormTauPiP(nmax, theta, order):
             dnn1 = dn[:, indn - 1]
         elif order == 'reversed':
             # d_(m,+1)^n
-            dnp1 = np.flip(dn[:, indn + 1])
+            dnp1 = np.fliplr(dn[:, indn + 1][np.newaxis, :])
             # d_(m,0)^n
-            dn01 = np.flip(dn[:, indn ])
+            dn01 = np.fliplr(dn[:, indn ][np.newaxis, :])
             # d_(m,-1)^n
-            dnn1 = np.flip(dn[:, indn - 1])
+            dnn1 = np.fliplr(dn[:, indn - 1][np.newaxis, :])
         
         # Normalization Constants
         NormTauPi = np.sqrt((2 * indn + 1) / 8)
-        NormP = np.sqrt((2 * indn + 1) / (2 * indn * (indn + 1)))
+        NormP     = np.sqrt((2 * indn + 1) / (2 * indn * (indn + 1)))
         
         # Output Functions
-        NPi[indn - 1, :2 * indn + 1] = -NormTauPi * (dnp1 + dnn1)
+        NPi[indn - 1, :2 * indn + 1]  = -NormTauPi * (dnp1 + dnn1)
         NTau[indn - 1, :2 * indn + 1] = -NormTauPi * (dnp1 - dnn1)
-        NP[indn - 1, :2 * indn + 1] = NormP * dn01
+        NP[indn - 1, :2 * indn + 1]   =  NormP * dn01
     
     # Correction to the Floating Numbers
     NPi[np.abs(NPi) < 1e-15] = 0

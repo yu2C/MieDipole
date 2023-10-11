@@ -25,6 +25,7 @@ from SphBessel   import SphBessel
 #import NormTauPiP
 from VectSphFunc import VectSphFunc
 from TenCont_v1  import TenCont
+import scipy.io as sio
 
 #Settings = {
  #   "nmax"	     : 30,
@@ -65,16 +66,17 @@ def SourCoeff(Settings, type):
         ni = Settings['nr'][0]
     
     kr = ni * Settings['k0'] * Settings['DPos']['Sph'][0]
-    print('SourCoeff kr')
-    print(kr)
-    print('SourCoeff ni')
-    print(ni)    
-    print("SourCoeff Settings['nr'][0]")
-    print(Settings['nr'][0])
-    print("SourCoeff Settings['k0']")
-    print(Settings['k0'])
-    print("SourCoeff Settings['nr']")
-    print(Settings['nr'])   
+    #print('SourCoeff kr')
+    #print(kr)
+    #print('SourCoeff ni')
+    #print(ni)    
+    #print("SourCoeff Settings['nr'][0]")
+    #print(Settings['nr'][0])
+    #print("SourCoeff Settings['k0']")
+    #print(Settings['k0'])
+    #print("SourCoeff Settings['nr']")
+    #print(Settings['nr']) 
+      
     # Preallocation
     m = -np.inf * np.ones((nmax, 2 * nmax + 1), dtype=int)
     
@@ -90,9 +92,15 @@ def SourCoeff(Settings, type):
         m_exp[np.isnan(m_exp)] = 0
         emphi = np.sqrt(1 / (2 * np.pi)) * m_exp
     
+
     # Generate N and M Functions
-    
+    #print("SourCoeff emphi : ")
+    #print(emphi)
+    #sio.savemat('./SourCoeff_DRad.mat', mdict=Settings['DRad'])
+    #sio.savemat('./SourCoeff_DNAng.mat', mdict=Settings['DNAng'])
+
     VSF = VectSphFunc(kr, nmax, Settings['DRad'], Settings['DNAng'], emphi)
+    #sio.savemat('./SourCoeff_VSF.mat', mdict=VSF)
     
     # Calculate Prefactor
     if type == "Green's function only":

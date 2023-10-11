@@ -1,30 +1,39 @@
 import numpy as np
-from Settings1 import Settings  # Assuming Settings1 is the module containing the Settings dictionary
-from NormTauPiP import NormTauPiP
-from SourCoeff import SourCoeff
-from MieSingle import MieSingle
+from Settings1   import Settings  # Assuming Settings1 is the module containing the Settings dictionary
+from NormTauPiP  import NormTauPiP
+from SourCoeff   import SourCoeff
+from MieSingle   import MieSingle
 from VectSphFunc import VectSphFunc
-from SphBessel import SphBessel
-from C2S import C2S
-from S2S import S2S
-from EdipField import EdipField
+from SphBessel   import SphBessel
+from C2S         import C2S
+from S2S         import S2S
+from EdipField   import EdipField
 import scipy.io as sio
 
 
 def TwoGR0(settings):
     Temp = {}
+    Output = {}
     nmax = settings['nmax']
     rhoD = settings['nr'][0] * settings['k0'] * settings['DPos']['Sph'][0]
     rhoA = settings['nr'][0] * settings['k0'] * settings['APos']['Sph'][0]
     rhoD = rhoD[0]
     rhoA = rhoA[0]
+    #print("TwoGR0 rhoD : ")
     #print(rhoD)
+    #print("TwoGR0 rhoA : ")
+    #print(rhoA)
+    
     # Radial Functions
     if 'DRad' not in settings:
         settings['DRad'] = SphBessel(rhoD, nmax, 1, 'hankel1')
 
     if 'ARad' not in settings:
         settings['ARad'] = SphBessel(rhoA, nmax, 1, 'hankel1')
+    
+    #sio.savemat('./TwoGR0_DRad.mat', mdict=settings['DRad'])
+    #sio.savemat('./TwoGR0_ARad.mat', mdict=settings['ARad'])
+
 
     # Angular Functions
     if 'DNAng' not in settings:
@@ -47,25 +56,28 @@ def TwoGR0(settings):
             emphi = np.sqrt(1/(2*np.pi)) * np.exp(1j * m * settings['APos']['Sph'][2])
             # Change exp(-inf) = NaN to Zero
             emphi[np.isnan(emphi)] = 0
+            
+    #print("TwoGR0 emphi : ")
+    #print(emphi)
 
     # Source Coefficients
     if 'Source' not in settings:
         settings['Source'] = SourCoeff(settings, "Green's function only")
     
-    sio.savemat('./TwoGR0_Source.mat', mdict=settings['Source'])
+    #sio.savemat('./TwoGR0_Source.mat', mdict=settings['Source'])
 
 
     # Mie Coefficients
     if 'Layer0' not in settings:
         if settings['BC'] == 'sphere':
-            settings['Source']['p'] = settings['Source']['p'].reshape(70, 141)
-            settings['Source']['q'] = settings['Source']['q'].reshape(70, 141)
+            settings['Source']['p'] = settings['Source']['p'].reshape(nmax, 2 * nmax + 1)
+            settings['Source']['q'] = settings['Source']['q'].reshape(nmax, 2 * nmax + 1)
             
             settings['Layer0'] = MieSingle(settings['nr'], settings['k0s'], nmax)
             #print(settings['Source']['p'].shape)
             #print(settings['Layer0']['alpha'])
-            settings['Layer0']['alpha'] = settings['Layer0']['alpha'].reshape(1, 70)
-            settings['Layer0']['beta']  = settings['Layer0']['beta'].reshape(1, 70)
+            settings['Layer0']['alpha'] = settings['Layer0']['alpha'].reshape(1, nmax)
+            settings['Layer0']['beta']  = settings['Layer0']['beta'].reshape(1, nmax)
             settings['Layer0']['a']     = settings['Source']['p'] * np.transpose(settings['Layer0']['alpha'])
             settings['Layer0']['b']     = settings['Source']['q'] * np.transpose(settings['Layer0']['beta'])
         #elif settings['BC'] == 'simplecavity':
@@ -86,8 +98,9 @@ def TwoGR0(settings):
     #print(settings['ANAng'])
     #print("TwoGR0 emphi : ")
     #print(emphi)
+    #sio.savemat('./TwoGR0_ARad.mat', mdict=settings['ARad'])    
     Temp['AVSF'] = VectSphFunc(rhoA, nmax, settings['ARad'], settings['ANAng'], emphi)
-    #sio.savemat('./TwoGR0_temp_avsf.mat', mdict=temp_avsf)
+    #sio.savemat('./TwoGR0_Temp_AVSF.mat', mdict=Temp['AVSF'])
 
     # Donor Dipole Field
     if settings['BC'] == 'simplecavity':
@@ -123,36 +136,41 @@ def TwoGR0(settings):
 
     Temp['Layer0M'] = (np.einsum('ijk,ij->k', Temp['AVSF']['M'], settings['Layer0']['b'])).reshape((3, 1))
     Temp['Layer0N'] = (np.einsum('ijk,ij->k', Temp['AVSF']['N'], settings['Layer0']['a'])).reshape((3, 1))
-    print("TwoGR0 Temp['Layer0N'] : ")
-    print(Temp['Layer0N'])
-    print("TwoGR0 Temp['Layer0M'] : ")
-    print(Temp['Layer0M'])
+    #print("TwoGR0 Temp['Layer0N'] : ")
+    #print(Temp['Layer0N'])
+    #print("TwoGR0 Temp['Layer0M'] : ")
+    #print(Temp['Layer0M'])
     # Two-Points Green's Function (G.Dori, 1/m)
-    output_g = Temp['Layer0M'] + Temp['Layer0N'] + settings['EdipS1'] / (4*np.pi*(settings['nr'][0]*settings['k0'])**2)
-
+    Output['G'] = Temp['Layer0M'] + Temp['Layer0N'] + settings['EdipS1'] / (4*np.pi*(settings['nr'][0]*settings['k0'])**2)
+    
+    #print("TwoGR0 Output['G'] : ")
+    #print(Output['G'])
     # Total Electric Field at the Acceptor Position (dipole moment = 1)
-    output_etot = 4*np.pi*(settings['nr'][0]*settings['k0'])**2 * output_g
-
+    Output['Etot'] = 4*np.pi*(settings['nr'][0]*settings['k0'])**2 * Output['G']
+    
+    #print("TwoGR0 Output['Etot'] : ")
+    #print(Output['Etot'])
     # Total Electric Field at the Acceptor Position (SI)
     epsilon0 = 8.854187817e-12
-    output_etotsi = settings['Dpstrength'] * (settings['nr'][0]*settings['k0'])**2 / epsilon0 * output_g
-
+    Output['EtotSI'] = settings['Dpstrength'] * (settings['nr'][0]*settings['k0'])**2 / epsilon0 * Output['G']
+    
+    #print("TwoGR0 Output['EtotSI'] : ")
+    #print(Output['EtotSI'])
     # Total Intensity at the Acceptor Position
-    output_int = np.linalg.norm(output_etot)**2
+    Output['Int'] = np.linalg.norm(Output['Etot'])**2
 
     # Dipole Field (dipole moment = 1, Gaussian unit)
-    output_edip = settings['EdipS1']
+    Output['Edip'] = settings['EdipS1']
 
     # Etot / Edip
-    output_ne_tot = output_etot / settings['EdipS1']
-
-    return {
-        'G'     : output_g,
-        'Etot'  : output_etot,
-        'EtotSI': output_etotsi,
-        'Int'   : output_int,
-        'Edip'  : output_edip,
-        'NEtot' : output_ne_tot
-    }
+    #print("TwoGR0 settings['EdipS1'] : ")
+    #print(settings['EdipS1'])
+    
+    Output['NEtot'] = Output['Etot'] / settings['EdipS1']
+    Output['NEtot'][np.isinf(Output['NEtot'])] = 0
+    #print("TwoGR0 Output['NEtot'] : ")
+    #print(Output['NEtot'])
+    
+    return Output
 
 #print(TwoGR0(Settings))

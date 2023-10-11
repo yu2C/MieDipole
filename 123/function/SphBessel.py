@@ -21,7 +21,7 @@ import scipy.io as sio
 
 
 def MSTA1(z, mp):
-    a0 = abs(z)
+    a0 = np.abs(z)
     n0 = int(1.1 * a0) + 1
     f0 = envj(n0, a0) - mp
     n1 = n0 + 5
@@ -32,7 +32,7 @@ def MSTA1(z, mp):
         nn = int(nn)
         f = envj(nn, a0) - mp
         
-        if abs(nn - n1) < 1:
+        if np.abs(nn - n1) < 1:
             break
         
         n0 = n1
@@ -43,7 +43,7 @@ def MSTA1(z, mp):
     return nn
 
 def MSTA2(z, n, mp):
-    a0 = abs(z)
+    a0 = np.abs(z)
     hmp = 0.5 * mp
     ejn = envj(n, a0)
     
@@ -63,7 +63,7 @@ def MSTA2(z, n, mp):
         nn = int(nn)
         f = envj(nn, a0) - obj
         
-        if abs(nn - n1) < 1:
+        if np.abs(nn - n1) < 1:
             break
         
         n0 = n1
@@ -75,11 +75,12 @@ def MSTA2(z, n, mp):
 
 def envj(n, z):
     n = max(1, abs(n))
+    max
     result = 0.5 * np.log10(6.28 * n) - n * np.log10(1.36 * z / n)
     return result
 
 def sbesselc(z, n):
-    a0 = abs(z)
+    a0 = np.abs(z)
     nm = n
     
     # If circle checked
@@ -117,7 +118,7 @@ def sbesselc(z, n):
             cf0 = cf1
             cf1 = cf
         
-        if abs(csa) > abs(csb):
+        if np.abs(csa) > np.abs(csb):
             cs = csa / cf
         else:
             cs = csb / cf0
@@ -134,7 +135,7 @@ def sbesselc(z, n):
     for k in range(2, min(nm, n) + 1):
         j = k + 1
         
-        if abs(csj[j - 2]) >= abs(csj[j - 3]):
+        if np.abs(csj[j - 2]) >= np.abs(csj[j - 3]):
             csy[j - 1] = (csj[j - 1] * csy[j - 2] - 1.0 / z ** 2) / csj[j - 2]
         else:
             csy[j - 1] = (csj[j - 1] * csy[j - 3] - (2.0 * k - 1.0) / z ** 3) / csj[j - 3]
@@ -152,13 +153,13 @@ def rcbesselc(z, n):
     
     if abs(z) < 1e-60: # Treat z = 0 as a special case
         print('ricatti-bessel function precision down')
-        drcj[0] = 1.0 # zeroth order
+        drcj[0] =  1.0 # zeroth order
         rcy     = -1.0e300 * np.ones(n + 1)
-        drcy    = 1.0e300 * np.ones(n + 1)
+        drcy    =  1.0e300 * np.ones(n + 1)
         rcy[0]  = -1.0
-        drcy[0] = 0.0
+        drcy[0] =  0.0
     else:
-        rcj[0] = np.sin(z)  # zeroth order
+        rcj[0] =  np.sin(z)  # zeroth order
         rcy[0] = -np.cos(z)
         rcj[1] = rcj[0] / z - np.cos(z)  # first order
         rcy[1] = rcy[0] / z - np.sin(z)
@@ -170,19 +171,16 @@ def rcbesselc(z, n):
         for Ky in range(3, n + 2):
             RF2 = (2.0 * (Ky - 1) - 1.0) * RF1 / z - RF0
             
-            if abs(RF2) > 1.0e300:
+            if np.abs(RF2) > 1.0e300:
                 continue
             
             rcy[Ky - 1] = RF2
             RF0 = RF1
             RF1 = RF2
-        
-        NMy = Ky - 1  
+            
+        NMy = n  
         #print(NMy)
         
-        
-    
-    
         drcy[0] = np.sin(z)
         drcy[1] = -rcy[1] / z + rcy[0]
         
@@ -209,7 +207,7 @@ def rcbesselc(z, n):
                 F0 = F1
                 F1 = F
             
-            if abs(rcj0) > abs(rcj1):
+            if np.abs(rcj0) > np.abs(rcj1):
                 CS = rcj0 / F
             else:
                 CS = rcj1 / F0
@@ -251,31 +249,31 @@ def SphBessel(kr, nmax, array, type):
             rcj, _, drcj, _ = rcbesselc(kr, nmax)
             
             if array == 0:
-                Z = rcj[nmax]
-                dZ = drcj[nmax]
+                Z     = rcj[nmax]
+                dZ    = drcj[nmax]
                 raddZ = dZ / kr
             else:
-                rcj = rcj[1:]
-                drcj = drcj[1:]
-                Z = rcj
-                dZ = drcj
+                rcj   = rcj[1:]
+                drcj  = drcj[1:]
+                Z     = rcj
+                dZ    = drcj
                 raddZ = dZ / kr
         
-        Rad['j1'] = z1
-        Rad['psi'] = Z
-        Rad['dpsi'] = dZ
+        Rad['j1']      = z1
+        Rad['psi']     = Z
+        Rad['dpsi']    = dZ
         Rad['raddpsi'] = raddZ
     
     elif type == 'hankel1':
         if kr == 0:
             if nmax == 0:
                 z1 = 1 - 1j * 1e300
-                Z = -1j
+                Z  = -1j
                 dZ = 1
             else:
-                z1 = complex(0, -1e300)
-                Z = complex(0, -1e300)
-                dZ = 1j * 1e300
+                z1    = complex(0, -1e300)
+                Z     = complex(0, -1e300)
+                dZ    = 1j * 1e300
                 raddZ = 0
         else:
             csj, csy = sbesselc(kr, nmax)
@@ -291,21 +289,21 @@ def SphBessel(kr, nmax, array, type):
             rcj, rcy, drcj, drcy = rcbesselc(kr, nmax)
             
             if array == 0:
-                Z = rcj[nmax] + 1j * rcy[nmax]
-                dZ = drcj[nmax] + 1j * drcy[nmax]
+                Z     = rcj[nmax] + 1j * rcy[nmax]
+                dZ    = drcj[nmax] + 1j * drcy[nmax]
                 raddZ = dZ / kr
             else:
-                rcj = rcj[1:]
-                rcy = rcy[1:]
-                drcj = drcj[1:]
-                drcy = drcy[1:]
-                Z = rcj + 1j * rcy
-                dZ = drcj + 1j * drcy
+                rcj   = rcj[1:]
+                rcy   = rcy[1:]
+                drcj  = drcj[1:]
+                drcy  = drcy[1:]
+                Z     = rcj + 1j * rcy
+                dZ    = drcj + 1j * drcy
                 raddZ = dZ / kr
         
-        Rad['h1'] = z1
-        Rad['xi'] = Z
-        Rad['dxi'] = dZ
+        Rad['h1']     = z1
+        Rad['xi']     = Z
+        Rad['dxi']    = dZ
         Rad['raddxi'] = raddZ
     
     #sio.savemat('./SphBessel.mat', mdict=Rad)

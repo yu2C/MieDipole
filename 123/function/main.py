@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.io as sio
 import sys
 import json
 #from Settings1 import Settings
@@ -86,7 +87,7 @@ elif Settings['BC'] == 'coreshell':
 Settings['DPos']['Sph'] = C2S(Settings['DPos']['Cart'])
 Settings['DOri']['Sph'] = VecTrans(Settings['DOri']['Cart'], Settings['DPos']['Sph'][1:3], 'C2S')
 
-
+# for wavelength mode
 # Times of the 'for loop'
 Settings['nn'] = Settings['nr'].shape[0]
 #print("Main Settings['nn']")
@@ -103,6 +104,10 @@ Settings['APos']['Sph2'] = C2S(Settings['APos']['Cart'] - Settings['DPos']['Cart
 Settings['DNAng'] = NormTauPiP(Settings['nmax'], Settings['DPos']['Sph'][1], 'reversed')
 Settings['ANAng'] = NormTauPiP(Settings['nmax'], Settings['APos']['Sph'][1], 'normal')
 
+
+#sio.savemat('./main_DNAng.mat', mdict=Settings['DNAng'])
+#sio.savemat('./main_ANAng.mat', mdict=Settings['ANAng'])
+
 # Radial Functions
 #rhoD = Settings['nr'][0] * Settings['k0'] * Settings['DPos']['Sph'][0]
 #Settings['DRad'] = SphBessel(rhoD, Settings['nmax'], 1, 'hankel1') 
@@ -111,15 +116,18 @@ Settings['ANAng'] = NormTauPiP(Settings['nmax'], Settings['APos']['Sph'][1], 'no
 ############################################################################
 ## Preallocation
 if Settings['ModeName'] == 'wavelength':
+    Etot     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
+    NormEtot = np.zeros((Settings['nn'], 3), dtype=np.complex128)
+    Edip     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
     EScat    = np.zeros((Settings['nn'], 3))
     ImG      = np.zeros((Settings['nn'], 1))
     if not np.array_equal(Settings['APos']['Cart'], Settings['DPos']['Cart']):
         ImG_vec = np.zeros((Settings['nn'], 3))
     Purcell  = np.zeros((Settings['nn'], 1))
 else:
-    Etot     = np.zeros((Settings['nn'], 3))
-    NormEtot = np.zeros((Settings['nn'], 3))
-    Edip     = np.zeros((Settings['nn'], 3))
+    Etot     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
+    NormEtot = np.zeros((Settings['nn'], 3), dtype=np.complex128)
+    Edip     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
 
 #print(Settings)
 ############################################################################
@@ -153,15 +161,17 @@ if Settings['ModeName'] == 'wavelength':
         else:
             if Settings['APos']['Sph'][0] >= Settings['rbc'][0]:
                 Output = TwoGR0(Settings)
+                #print('TwoGR0')
             else:
                 Output = TwoGR1(Settings)
+                #print('TwoGR1')
 
-            ImG_vec[ii, :]  = np.imag(Output['G']).T
-            Etot[ii, :]     = Output['Etot'].T
-            Edip[ii, :]     = Output['Edip'].T
-            NormEtot[ii, :] = Output['NEtot'].T
+            ImG_vec[ii, :]  = (np.imag(Output['G'])).T
+            Etot[ii, :]     = (Output['Etot']).T
+            Edip[ii, :]     = (Output['Edip']).T
+            NormEtot[ii, :] = (Output['NEtot']).T
 
         # Information
-        print(f'Progress: {((ii + 1) / Settings["nn"]) * 100:.2f}%')
+        #print(f'Progress: {((ii + 1) / Settings["nn"]) * 100:.2f}%')
 
 # Continue with the rest of the code
