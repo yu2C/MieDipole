@@ -12,6 +12,7 @@ import scipy.io as sio
 
 
 def TwoGR0(settings):
+    # Preallocation
     Temp = {}
     Output = {}
     nmax = settings['nmax']
@@ -31,8 +32,8 @@ def TwoGR0(settings):
     if 'ARad' not in settings:
         settings['ARad'] = SphBessel(rhoA, nmax, 1, 'hankel1')
     
-    #sio.savemat('./TwoGR0_DRad.mat', mdict=settings['DRad'])
-    #sio.savemat('./TwoGR0_ARad.mat', mdict=settings['ARad'])
+    sio.savemat('./TwoGR0_DRad.mat', mdict=settings['DRad'])
+    sio.savemat('./TwoGR0_ARad.mat', mdict=settings['ARad'])
 
 
     # Angular Functions

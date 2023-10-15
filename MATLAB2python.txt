@@ -5,3 +5,6 @@
 	Note the array order in MATLAB is beginning at 1 
 5. Test and Debug
 6. Refine and Optimize py code (later)
+
+Reshape : MATLAB(column major), Python(row major)
+Array   : MATLAB(lengthen the array automatically), Python(need corresponding dimension)

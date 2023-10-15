@@ -89,7 +89,10 @@ Settings['DOri']['Sph'] = VecTrans(Settings['DOri']['Cart'], Settings['DPos']['S
 
 # for wavelength mode
 # Times of the 'for loop'
+#print(Settings['nr'].shape)
 Settings['nn'] = Settings['nr'].shape[0]
+#print(Settings['nn'])
+
 #print("Main Settings['nn']")
 #print(Settings['nn'])
 #print("Main Settings['nr']")
@@ -173,5 +176,6 @@ if Settings['ModeName'] == 'wavelength':
 
         # Information
         #print(f'Progress: {((ii + 1) / Settings["nn"]) * 100:.2f}%')
+        break
 
 # Continue with the rest of the code

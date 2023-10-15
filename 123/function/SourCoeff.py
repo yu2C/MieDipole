@@ -94,13 +94,15 @@ def SourCoeff(Settings, type):
     
 
     # Generate N and M Functions
-    #print("SourCoeff emphi : ")
-    #print(emphi)
+    print("SourCoeff emphi : ")
+    print(emphi)
+    print('SourCoeff kr : ')
+    print(kr)
     #sio.savemat('./SourCoeff_DRad.mat', mdict=Settings['DRad'])
     #sio.savemat('./SourCoeff_DNAng.mat', mdict=Settings['DNAng'])
 
     VSF = VectSphFunc(kr, nmax, Settings['DRad'], Settings['DNAng'], emphi)
-    #sio.savemat('./SourCoeff_VSF.mat', mdict=VSF)
+    sio.savemat('./SourCoeff_VSF.mat', mdict=VSF)
     
     # Calculate Prefactor
     if type == "Green's function only":

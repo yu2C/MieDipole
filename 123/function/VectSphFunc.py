@@ -51,10 +51,13 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     
     # Construct the Array of Each Order
     n = np.arange(1, nmax + 1)
+    #print("VSF n.shape : ")
+    #print(n)
+    #print(n.shape)
     
     # Construct Radz (j_n(kr)/kr)
     if kr == 0:
-        Radz    = np.zeros((nmax, ))
+        Radz    = np.zeros((nmax, ), dtype=np.complex128)
         Radz[0] = 1/3
     else:
         Radz    = z1 / kr
