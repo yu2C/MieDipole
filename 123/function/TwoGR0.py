@@ -32,8 +32,8 @@ def TwoGR0(settings):
     if 'ARad' not in settings:
         settings['ARad'] = SphBessel(rhoA, nmax, 1, 'hankel1')
     
-    sio.savemat('./TwoGR0_DRad.mat', mdict=settings['DRad'])
-    sio.savemat('./TwoGR0_ARad.mat', mdict=settings['ARad'])
+    #sio.savemat('./TwoGR0_DRad.mat', mdict=settings['DRad'])
+    #sio.savemat('./TwoGR0_ARad.mat', mdict=settings['ARad'])
 
 
     # Angular Functions
@@ -42,6 +42,9 @@ def TwoGR0(settings):
 
     if 'ANAng' not in settings:
         settings['ANAng'] = NormTauPiP(nmax, settings['APos']['Sph'][1], 'normal')
+        
+    #sio.savemat('./TwoGR0_DNAng.mat', mdict=settings['DNAng'])
+    #sio.savemat('./TwoGR0_ANAng.mat', mdict=settings['ANAng'])
 
     # Azimuthal Functions
     if 'emphi' not in settings:
@@ -71,16 +74,16 @@ def TwoGR0(settings):
     # Mie Coefficients
     if 'Layer0' not in settings:
         if settings['BC'] == 'sphere':
-            settings['Source']['p'] = settings['Source']['p'].reshape(nmax, 2 * nmax + 1)
-            settings['Source']['q'] = settings['Source']['q'].reshape(nmax, 2 * nmax + 1)
+            settings['Source']['p'] = np.reshape(settings['Source']['p'], (nmax, 2*nmax+1), order='F')
+            settings['Source']['q'] = np.reshape(settings['Source']['q'], (nmax, 2*nmax+1), order='F')
             
             settings['Layer0'] = MieSingle(settings['nr'], settings['k0s'], nmax)
             #print(settings['Source']['p'].shape)
             #print(settings['Layer0']['alpha'])
-            settings['Layer0']['alpha'] = settings['Layer0']['alpha'].reshape(1, nmax)
-            settings['Layer0']['beta']  = settings['Layer0']['beta'].reshape(1, nmax)
-            settings['Layer0']['a']     = settings['Source']['p'] * np.transpose(settings['Layer0']['alpha'])
-            settings['Layer0']['b']     = settings['Source']['q'] * np.transpose(settings['Layer0']['beta'])
+            settings['Layer0']['alpha'] = np.reshape(settings['Layer0']['alpha'], (1, nmax), order='F')
+            settings['Layer0']['beta']  = np.reshape(settings['Layer0']['beta'], (1, nmax), order='F')
+            settings['Layer0']['a']     = settings['Source']['p'] * (settings['Layer0']['alpha']).T
+            settings['Layer0']['b']     = settings['Source']['q'] * (settings['Layer0']['beta']).T
         #elif settings['BC'] == 'simplecavity':
         #    settings['Layer0'] = 'error' #MieSimCav(settings['nr'], settings['k0s'], nmax)
         #    settings['Layer0']['a'] = settings['Source']['r'] * np.transpose(settings['Layer0']['alpha'])
@@ -135,8 +138,8 @@ def TwoGR0(settings):
     #sio.savemat('./TwoGR0_Temp.mat', mdict=Temp['AVSF'])
     #sio.savemat('./TwoGR0_Layer0.mat', mdict=settings['Layer0'])
 
-    Temp['Layer0M'] = (np.einsum('ijk,ij->k', Temp['AVSF']['M'], settings['Layer0']['b'])).reshape((3, 1))
-    Temp['Layer0N'] = (np.einsum('ijk,ij->k', Temp['AVSF']['N'], settings['Layer0']['a'])).reshape((3, 1))
+    Temp['Layer0M'] = np.reshape(np.einsum('ijk,ij->k', Temp['AVSF']['M'], settings['Layer0']['b']), (3, 1), order='F')
+    Temp['Layer0N'] = np.reshape(np.einsum('ijk,ij->k', Temp['AVSF']['N'], settings['Layer0']['a']), (3, 1), order='F')
     #print("TwoGR0 Temp['Layer0N'] : ")
     #print(Temp['Layer0N'])
     #print("TwoGR0 Temp['Layer0M'] : ")

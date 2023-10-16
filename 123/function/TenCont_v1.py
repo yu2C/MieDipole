@@ -22,13 +22,13 @@ def TenCont(A, B, dim):
     sizeA_new = np.delete(sizeA, dim[0])
 
     # Reshape A for dot product
-    A_reshaped = np.reshape(A, (np.prod(sizeA_new), sizetar))
+    A_reshaped = np.reshape(A, (np.prod(sizeA_new), sizetar), order='F')
 
     # Perform the dot product
     result_dot = np.dot(A_reshaped, B)
 
     # Reshape the result back to the original shape, minus the contracted dimension
-    result = np.reshape(result_dot, sizeA_new)
+    result = np.reshape(result_dot, sizeA_new, order='F')
 
     return result
 

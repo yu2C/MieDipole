@@ -92,15 +92,15 @@ def SourCoeff(Settings, type):
     
 
     # Generate N and M Functions
-    print("SourCoeff emphi : ")
-    print(emphi)
-    print('SourCoeff kr : ')
-    print(kr)
-    sio.savemat('./SourCoeff_DRad.mat', mdict=Settings['DRad'])
+    #print("SourCoeff emphi : ")
+    #print(emphi)
+    #print('SourCoeff kr : ')
+    #print(kr)
+    #sio.savemat('./SourCoeff_DRad.mat', mdict=Settings['DRad'])
     #sio.savemat('./SourCoeff_DNAng.mat', mdict=Settings['DNAng'])
 
     VSF = VectSphFunc(kr, nmax, Settings['DRad'], Settings['DNAng'], emphi)
-    sio.savemat('./SourCoeff_VSF.mat', mdict=VSF)
+    #sio.savemat('./SourCoeff_VSF.mat', mdict=VSF)
     
     # Calculate Prefactor
     if type == "Green's function only":
@@ -115,8 +115,10 @@ def SourCoeff(Settings, type):
         Source['r'] = prefactor * TenCont(VSF['N'], Settings['DOri']['Sph'], [2, 0])
         Source['s'] = prefactor * TenCont(VSF['M'], Settings['DOri']['Sph'], [2, 0])
     else:
-        Source['p'] = prefactor * TenCont(VSF['N'], Settings['DOri']['Sph'], [2, 0])
-        Source['q'] = prefactor * TenCont(VSF['M'], Settings['DOri']['Sph'], [2, 0])
+        #Source['p'] = prefactor * TenCont(VSF['N'], Settings['DOri']['Sph'], [2, 0])
+        #Source['q'] = prefactor * TenCont(VSF['M'], Settings['DOri']['Sph'], [2, 0])
+        Source['p'] = prefactor * np.einsum('ijk, kl -> ij', VSF['N'], Settings['DOri']['Sph'])
+        Source['q'] = prefactor * np.einsum('ijk, kl -> ij', VSF['M'], Settings['DOri']['Sph'])
     
     sio.savemat('./SourCoeff_Source.mat', mdict=Source)
 

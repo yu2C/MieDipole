@@ -89,8 +89,8 @@ def SingleGR0(Settings):
         print(Settings['Source']['p'].size)
         print(Settings['Layer0']['beta'].size)
         print(Settings['Source']['q'].size)
-        Settings['Layer0']['a'] = np.transpose(Settings['Layer0']['alpha']).reshape((1, nmax)) @ Settings['Source']['p']  
-        Settings['Layer0']['b'] = np.transpose(Settings['Layer0']['beta']).reshape((1, nmax)) @ Settings['Source']['q']  
+        Settings['Layer0']['a'] = np.transpose(Settings['Layer0']['alpha']).reshape((1, nmax), order='F') @ Settings['Source']['p']  
+        Settings['Layer0']['b'] = np.transpose(Settings['Layer0']['beta']).reshape((1, nmax), order='F') @ Settings['Source']['q']  
     # Azimuthal Functions
     if 'emphi' not in Settings:
         emphi = np.sqrt(1 / (2 * np.pi))
@@ -101,8 +101,8 @@ def SingleGR0(Settings):
     
     #print(np.sum(Temp['DVSF']['M'] * Settings['Layer0']['b'], axis=(0, 1)))
     # Summing All orders of the Scattering Field
-    Temp['Layer0M'] = np.reshape(np.sum(Temp['DVSF']['M'] * Settings['Layer0']['b'].conj().T, axis=(0, 1)), (3, 1))
-    Temp['Layer0N'] = np.reshape(np.sum(Temp['DVSF']['N'] * Settings['Layer0']['a'].conj().T, axis=(0, 1)), (3, 1))
+    Temp['Layer0M'] = np.reshape(np.sum(Temp['DVSF']['M'] * Settings['Layer0']['b'].conj().T, axis=(0, 1)), (3, 1), order='F')
+    Temp['Layer0N'] = np.reshape(np.sum(Temp['DVSF']['N'] * Settings['Layer0']['a'].conj().T, axis=(0, 1)), (3, 1), order='F')
     print(Temp['DVSF']['M'].size)
     print(Temp['DVSF']['N'].size)
 

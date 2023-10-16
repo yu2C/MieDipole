@@ -31,8 +31,8 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     #Rad   = SphBessel.Rad(kr, nmax, array, type)
     #NAng  = NormTauPiP.NAng(nmax, theta, order)
     #sio.savemat('./VectSphFunc_Rad.mat', mdict=Rad)
-    print("VSF emphi : ")
-    print(emphi)
+    #print("VSF emphi : ")
+    #print(emphi)
     
     # Preallocation
     VSF = {
@@ -46,13 +46,19 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     elif 'j1' in Rad:
         z1 = Rad['j1']
     
+    #z1 = z1.reshape(-1, 1)
+    
     if   'raddxi'  in Rad:
         raddz = Rad['raddxi']
     elif 'raddpsi' in Rad:
         raddz = Rad['raddpsi']
+        
+    #raddz = raddz.reshape(-1, 1)
     
     # Construct the Array of Each Order
     n = np.arange(1, nmax + 1)
+    #n = n.reshape(-1, 1)
+
     #print("VSF n.shape : ")
     #print(n)
     #print(n.shape)
@@ -79,10 +85,18 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     VSF['M'][:, :, 1] = 1j * np.einsum('i,ij->ij', z1, NAng['NPi']) * emphi
     VSF['M'][:, :, 2] = -np.einsum('i,ij->ij', z1, NAng['NTau']) * emphi
     
+    #VSF['M'][:, :, 1] = 1j * z1 * NAng['NPi'] * emphi
+    #VSF['M'][:, :, 2] = -z1 * NAng['NTau'] * emphi
+    
+    
     # N Field
     VSF['N'][:, :, 0] = np.einsum('i,ij->ij', Radz*n*(n+1), NAng['NP']) * emphi
     VSF['N'][:, :, 1] = np.einsum('i,ij->ij', raddz, NAng['NTau']) * emphi
     VSF['N'][:, :, 2] = 1j * np.einsum('i,ij->ij', raddz, NAng['NPi']) * emphi
+    
+    #VSF['N'][:, :, 0] = Radz*n*(n+1) * NAng['NP'] * emphi
+    #VSF['N'][:, :, 1] = raddz * NAng['NTau'] * emphi
+    #VSF['N'][:, :, 2] = 1j * raddz * NAng['NPi'] * emphi
     
     #sio.savemat('./VectSphFunc.mat', mdict=VSF)
     return VSF

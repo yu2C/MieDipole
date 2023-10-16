@@ -44,8 +44,8 @@ def SingleGR1(settings):
         #print(Settings['Layer1']['delta'].shape)
         #print(Settings['Layer1']['gamma'].shape)
 
-        settings['Layer1']['d'] = settings['Source']['r'] * settings['Layer1']['delta'].reshape(70, 1)
-        settings['Layer1']['c'] = settings['Source']['s'] * settings['Layer1']['gamma'].reshape(70, 1)
+        settings['Layer1']['d'] = settings['Source']['r'] * settings['Layer1']['delta'].reshape((nmax, 1), order='F')
+        settings['Layer1']['c'] = settings['Source']['s'] * settings['Layer1']['gamma'].reshape((nmax, 1), order='F')
         #settings['Layer1']['d'] = np.einsum('i,j->ij', settings['Source']['r'].T, settings['Layer1']['delta'])
         #settings['Layer1']['c'] = np.einsum('i,j->i', settings['Source']['s'].T, settings['Layer1']['gamma'])
 
@@ -58,8 +58,8 @@ def SingleGR1(settings):
     temp_dvsf = VectSphFunc(rhoD, nmax, settings['DRad'], settings['DNAngN'], emphi)
 
     # Summing All order of the Scattering Field
-    temp_layer0m = np.sum(temp_dvsf['M'] * settings['Layer1']['c'].reshape((70, 141, 1)), axis=(1, 2)).reshape((70, 1))
-    temp_layer0n = np.sum(temp_dvsf['N'] * settings['Layer1']['d'].reshape((70, 141, 1)), axis=(1, 2)).reshape((70, 1))
+    temp_layer0m = np.sum(temp_dvsf['M'] * settings['Layer1']['c'].reshape((nmax, 2*nmax+1, 1), order='F'), axis=(1, 2)).reshape((nmax, 1), order='F')
+    temp_layer0n = np.sum(temp_dvsf['N'] * settings['Layer1']['d'].reshape((nmax, 2*nmax+1, 1), order='F'), axis=(1, 2)).reshape((nmax, 1), order='F')
 
     # Scattering Part at the Donor Position
     output_escat = temp_layer0m + temp_layer0n

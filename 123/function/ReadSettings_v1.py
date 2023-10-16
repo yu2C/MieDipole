@@ -41,14 +41,25 @@ def ReadSettings(filename):
     '''
     # Convert list to array
     DPos_Cart = Settings["DPos"]["Cart"]
+    #print("ReadSettings DPos_Cart : ")
+    #print(DPos_Cart)
     #DPos_Cart_column = DPos_Cart.reshape()
     Settings["DPos"]["Cart"] = np.array(DPos_Cart).reshape(-1, 1)
+    #print('ReadSettings type(Settings["DPos"]["Cart"]) : ')
+    #print(type(Settings["DPos"]["Cart"]))
+    #print(Settings["DPos"]["Cart"])
     APos_Cart = Settings["APos"]["Cart"]
     Settings["APos"]["Cart"] = np.array(APos_Cart).reshape(-1, 1)
+    #print('ReadSettings Settings["APos"]["Cart"] : ')
+    #print(Settings["APos"]["Cart"])
     DOri_Cart = Settings["DOri"]["Cart"]
     Settings["DOri"]["Cart"] = np.array(DOri_Cart).reshape(-1, 1)
+    #print('ReadSettings Settings["DOri"]["Cart"] : ')
+    #print(Settings["DOri"]["Cart"])
     AOri_Cart = Settings["AOri"]["Cart"]
     Settings["AOri"]["Cart"] = np.array(AOri_Cart).reshape(-1, 1)
+    #print('ReadSettings Settings["AOri"]["Cart"] : ')
+    #print(Settings["AOri"]["Cart"])
 
     # Verify the assignments of dielectric function
     if 'epsi0' in tmp_set:
