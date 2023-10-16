@@ -19,8 +19,6 @@
 
 #import Settings1
 import numpy as np
-#import pandas as pd
-#import Inputfile as i
 from SphBessel   import SphBessel
 #import NormTauPiP
 from VectSphFunc import VectSphFunc
@@ -98,7 +96,7 @@ def SourCoeff(Settings, type):
     print(emphi)
     print('SourCoeff kr : ')
     print(kr)
-    #sio.savemat('./SourCoeff_DRad.mat', mdict=Settings['DRad'])
+    sio.savemat('./SourCoeff_DRad.mat', mdict=Settings['DRad'])
     #sio.savemat('./SourCoeff_DNAng.mat', mdict=Settings['DNAng'])
 
     VSF = VectSphFunc(kr, nmax, Settings['DRad'], Settings['DNAng'], emphi)
@@ -120,6 +118,8 @@ def SourCoeff(Settings, type):
         Source['p'] = prefactor * TenCont(VSF['N'], Settings['DOri']['Sph'], [2, 0])
         Source['q'] = prefactor * TenCont(VSF['M'], Settings['DOri']['Sph'], [2, 0])
     
+    sio.savemat('./SourCoeff_Source.mat', mdict=Source)
+
     return Source
 
 

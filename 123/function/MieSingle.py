@@ -36,7 +36,7 @@ def MieSingle(nr, ks, nmax):
     n0psi, n0dpsi = n0Rad['psi'], n0Rad['dpsi']
     
     n0Rad = SphBessel(n0kr1, nmax, 1, 'hankel1')
-    n0xi, n0dxi = n0Rad['xi'], n0Rad['dxi']
+    n0xi,  n0dxi  = n0Rad['xi'], n0Rad['dxi']
     
     n1Rad = SphBessel(n1kr1, nmax, 1, 'bessel')
     n1psi, n1dpsi = n1Rad['psi'], n1Rad['dpsi']

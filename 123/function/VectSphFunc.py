@@ -31,6 +31,8 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     #Rad   = SphBessel.Rad(kr, nmax, array, type)
     #NAng  = NormTauPiP.NAng(nmax, theta, order)
     #sio.savemat('./VectSphFunc_Rad.mat', mdict=Rad)
+    print("VSF emphi : ")
+    print(emphi)
     
     # Preallocation
     VSF = {
