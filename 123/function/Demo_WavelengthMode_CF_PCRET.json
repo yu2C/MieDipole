@@ -24,7 +24,7 @@
 	  "lambda_s"   : 300e-9,
 	  "lambda_e"   : 700e-9,
 	  "epsi0"	   : 1,
-	  "epsi1"	   : "./123/function/Ag_JPCL.csv",
+	  "epsi1"	   : "./Ag_JPCL.csv",
 	  "epsi2"	   : ".\\InputFiles\\DielectricFunctions\\Ag_JPCL.csv"
     },
   "fplot"	 : {

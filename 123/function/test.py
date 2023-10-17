@@ -95,7 +95,10 @@ plt.grid(True)
 plt.show()
 '''
 
-A = np.array([1])
-B = np.array([1, 2], [1])
+A = np.ones((1, 4, 3))
+B = np.ones((3, 1))
+C = np.einsum('ijk, kl-> ij', A, B)
 print(A.shape)
 print(B.shape)
+print(C.shape)
+print(C)

@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.io as sio
+import matplotlib.pyplot as plt
+import matplotlib.axes as x
 import sys
 import json
 #from Settings1 import Settings
@@ -20,7 +22,7 @@ from TwoGR1          import TwoGR1
 sys.path.append('./Functions/')
 
 # File to be calculated
-FilePath = './123/function/'#'./InputFiles/'  # Folder Path of Input Files
+FilePath = './' #'./123/function/'#'./InputFiles/'  # Folder Path of Input Files
 FileName = 'Demo_WavelengthMode_CF_PCRET'  # File Name
 
 # Output Figure Size (value = 0~1)
@@ -118,19 +120,17 @@ Settings['ANAng'] = NormTauPiP(Settings['nmax'], Settings['APos']['Sph'][1], 'no
 ############################################################################
 ############################################################################
 ## Preallocation
+Etot     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
+NormEtot = np.zeros((Settings['nn'], 3), dtype=np.complex128)
+Edip     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
 if Settings['ModeName'] == 'wavelength':
-    Etot     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
-    NormEtot = np.zeros((Settings['nn'], 3), dtype=np.complex128)
-    Edip     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
     EScat    = np.zeros((Settings['nn'], 3))
     ImG      = np.zeros((Settings['nn'], 1))
+    Purcell  = np.zeros((Settings['nn'], 1))
     if not np.array_equal(Settings['APos']['Cart'], Settings['DPos']['Cart']):
         ImG_vec = np.zeros((Settings['nn'], 3))
-    Purcell  = np.zeros((Settings['nn'], 1))
-else:
-    Etot     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
-    NormEtot = np.zeros((Settings['nn'], 3), dtype=np.complex128)
-    Edip     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
+
+
 
 #print(Settings)
 ############################################################################
@@ -178,7 +178,6 @@ if Settings['ModeName'] == 'wavelength':
         #print(f'Progress: {((ii + 1) / Settings["nn"]) * 100:.2f}%')
         
 
-# Continue with the rest of the code
 if Settings['ModeName'] == 'wavelength':
     if Settings['Quantity'] == 'CF':
         # Coupling Factor
@@ -189,6 +188,13 @@ if Settings['ModeName'] == 'wavelength':
         NormEtot[np.isnan(NormEtot)] = 0
         # Enhancement Factor
         EF = abs(NormEtot @ Settings['AOri']['Sph']) ** 2
+        Result = {
+            'CF_py'       : CF,
+            'CFdip_py'    : CFdip,
+            'NormEtot_py' : NormEtot,
+            'EF_py'       : EF,
+        }
+        sio.savemat('./main_result.mat', mdict=Result)
     elif Settings['Quantity'] == 'Purcell':
         pass
     elif Settings['Quantity'] == 'ImG':
@@ -197,19 +203,95 @@ if Settings['ModeName'] == 'wavelength':
     elif Settings['Quantity'] == 'J':
         if 'ImG_vec' in locals():
             ImG = ImG_vec * Settings['AOri']['Sph']
-        c = 2.9979e8
-        Debye = 3.33564e-30
+        c        = 2.9979e8
+        Debye    = 3.33564e-30
         epsilon0 = 8.854187817e-12
-        hbar = 1.05457182e-34
-        const = ((2 * np.pi * 1239.84193 / (lambda_val * 1e9) * 2.4179893e14) ** 2
-                 / c ** 2 * Debye ** 2 / (np.pi * hbar * epsilon0))
+        hbar     = 1.05457182e-34
+        const    = ((2 * np.pi * 1239.84193 / (lambda_val * 1e9) * 2.4179893e14) ** 2
+                    / c ** 2 * Debye ** 2 / (np.pi * hbar * epsilon0))
         J = const * ImG
         
         
-           
-import matplotlib.pyplot as plt
 
 
+# plot CF
+
+
+# Your data for the first plot (I'm assuming lambda_val, CF, and CFdip are already defined)
+x_axis = 1.0 / lambda_val * 1e-2  # wavenumber in cm^{-1}
+y_axis = CF * 1e-12                # CF in some units
+y_axis_QED = CFdip * 1e-12         # CFdip in some units
+y_axis_EF = EF                     # EF in some units
+
+# Create the first plot
+fig1, ax1 = plt.subplots()
+
+# Plot the CF data
+ax1.plot(x_axis, y_axis, label='CF')
+
+# Plot the QED data in red
+ax1.plot(x_axis, y_axis_QED, color='red', label='QED')
+
+# Set x and y labels
+ax1.set_xlabel(r'wavenumber cm$^{-1}$')
+ax1.set_ylabel('CF')
+
+# Set the y-axis to log scale
+ax1.set_yscale('log')
+
+# Find minimum and maximum y-values among both datasets
+y_min = min(np.min(y_axis), np.min(y_axis_QED))
+y_max = max(np.max(y_axis), np.max(y_axis_QED)) + 0.2e+33
+
+# Set y-axis limits based on min and max values
+ax1.set_ylim(y_min, y_max)
+
+# Set x-axis limits
+ax1.set_xlim(14285, 33333)
+
+# Add a title
+ax1.set_title('CF and QED')
+
+# Add a legend
+ax1.legend()
+
+# Show the first plot
+plt.show()
+
+# Create the second plot
+fig2, ax2 = plt.subplots()
+
+# Plot the EF data
+ax2.plot(x_axis, y_axis_EF, label='EF')
+
+# Set x and y labels
+ax2.set_xlabel(r'wavenumber cm$^{-1}$')
+ax2.set_ylabel('EF')
+
+ax2.set_yscale('log')  
+
+# Set new y-axis limits for EF data
+y_min_EF = np.min(y_axis_EF)
+y_max_EF = np.max(y_axis_EF) + 0.3e+2
+
+ax2.set_ylim(1e-3, 1e+5)
+
+# Set x-axis limits to be the same as the first plot
+ax2.set_xlim(14285, 33333)
+
+# Add a title
+ax2.set_title('EF')
+
+# Add a legend
+ax2.legend()
+
+# Show the second plot
+plt.show()
+
+
+
+
+'''
 if Settings['ModeName'] == 'wavelength':
     if Settings['Quantity'] == 'CF':
         fplot = {}
@@ -251,5 +333,5 @@ if Settings['ModeName'] == 'wavelength':
         fplot['x'] = 1239.84193 / (lambda_val * 1e9)
         fplot['y'] = J
         MyPlot(fplot, Resize, 0)
-
+'''
 
