@@ -176,6 +176,80 @@ if Settings['ModeName'] == 'wavelength':
 
         # Information
         #print(f'Progress: {((ii + 1) / Settings["nn"]) * 100:.2f}%')
-        break
+        
 
 # Continue with the rest of the code
+if Settings['ModeName'] == 'wavelength':
+    if Settings['Quantity'] == 'CF':
+        # Coupling Factor
+        CF = abs(Etot @ Settings['AOri']['Sph']) ** 2
+        # Coupling Factor along R Direction (Vacuum)
+        CFdip = abs(Edip @ Settings['AOri']['Sph']) ** 2
+        # Setting 0/0 to 0 for Etot/Edip
+        NormEtot[np.isnan(NormEtot)] = 0
+        # Enhancement Factor
+        EF = abs(NormEtot @ Settings['AOri']['Sph']) ** 2
+    elif Settings['Quantity'] == 'Purcell':
+        pass
+    elif Settings['Quantity'] == 'ImG':
+        if 'ImG_vec' in locals(): ####
+            ImG = ImG_vec * Settings['AOri']['Sph']
+    elif Settings['Quantity'] == 'J':
+        if 'ImG_vec' in locals():
+            ImG = ImG_vec * Settings['AOri']['Sph']
+        c = 2.9979e8
+        Debye = 3.33564e-30
+        epsilon0 = 8.854187817e-12
+        hbar = 1.05457182e-34
+        const = ((2 * np.pi * 1239.84193 / (lambda_val * 1e9) * 2.4179893e14) ** 2
+                 / c ** 2 * Debye ** 2 / (np.pi * hbar * epsilon0))
+        J = const * ImG
+        
+        
+           
+import matplotlib.pyplot as plt
+
+
+if Settings['ModeName'] == 'wavelength':
+    if Settings['Quantity'] == 'CF':
+        fplot = {}
+        fplot['x'] = 1.0 / lambda_val * 1e-2
+        fplot['y'] = CF * 1e-12
+        MyPlot(fplot, Resize, 0)
+        
+        fplot['y'] = CFdip * 1e-12
+        fplot['colorstyle'] = 'r-'
+        MyPlot(fplot, Resize, 1)
+        
+        if Settings['BC'] == 'sphere':
+            plt.legend(['Single Sphere', 'Vacuum (QED)'], loc='best')
+        elif Settings['BC'] == 'coreshell':
+            plt.legend(['Core/Shell Sphere', 'Vacuum (QED)'], loc='best')
+        
+        fplot['y'] = EF
+        fplot['colorstyle'] = '-'
+        fplot['range'] = [float('-inf'), float('inf'), 1e-3, 1e5]
+        fplot['ylabel'] = 'Enhancement'
+        MyPlot(fplot, Resize, 0)
+        
+        if Settings['BC'] == 'sphere':
+            plt.legend(['Single Sphere'], loc='best')
+        elif Settings['BC'] == 'coreshell':
+            plt.legend(['Core/Shell Sphere'], loc='best')
+    
+    elif Settings['Quantity'] == 'Purcell':
+        fplot['x'] = 1239.84193 / (lambda_val * 1e9)
+        fplot['y'] = Purcell
+        MyPlot(fplot, Resize, 0)
+    
+    elif Settings['Quantity'] == 'ImG':
+        fplot['x'] = 1239.84193 / (lambda_val * 1e9)
+        fplot['y'] = ImG
+        MyPlot(fplot, Resize, 0)
+    
+    elif Settings['Quantity'] == 'J':
+        fplot['x'] = 1239.84193 / (lambda_val * 1e9)
+        fplot['y'] = J
+        MyPlot(fplot, Resize, 0)
+
+
