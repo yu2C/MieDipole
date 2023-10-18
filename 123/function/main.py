@@ -141,16 +141,18 @@ if Settings['ModeName'] == 'wavelength':
         Settings['k0']  = k0[ii] # variable
         Settings['nr']  = np.array(nr[ii, :], dtype=np.complex128)
         #Settings['nr']  = Settings['nr'].reshape((1, 2))
-        Settings['k0s'] = np.array([k0s[ii]])
-        #print(Settings['nr'])
-        #print("Settings['k0s']")
-        #print(Settings['k0s'])
-        #print("=============================")
-        #print('k0')
+        Settings['k0s'] = np.array([k0s[ii]]) # convert to array for coreshell
+        '''
         #print("main Settings['k0']")
         #print(Settings['k0'])
-        #print("main Settings['nr']")
+        #print("main k0 : ")
+        #print('k0')
+        #print("main Settings['nr'] : ")
         #print(Settings['nr'])
+        #print("main Settings['k0s'] : ")
+        #print(Settings['k0s'])
+        '''
+
         # Determine which function is called by the acceptor position
         if np.array_equal(Settings['APos']['Cart'], Settings['DPos']['Cart']):
             if Settings['BC'] == 'simplecavity':
@@ -194,7 +196,7 @@ if Settings['ModeName'] == 'wavelength':
             'NormEtot_py' : NormEtot,
             'EF_py'       : EF,
         }
-        sio.savemat('./main_result.mat', mdict=Result)
+        #sio.savemat('./main_result.mat', mdict=Result)
     elif Settings['Quantity'] == 'Purcell':
         pass
     elif Settings['Quantity'] == 'ImG':
@@ -218,16 +220,16 @@ if Settings['ModeName'] == 'wavelength':
 
 
 # Your data for the first plot (I'm assuming lambda_val, CF, and CFdip are already defined)
-x_axis = 1.0 / lambda_val * 1e-2  # wavenumber in cm^{-1}
-y_axis = CF * 1e-12                # CF in some units
-y_axis_QED = CFdip * 1e-12         # CFdip in some units
-y_axis_EF = EF                     # EF in some units
+x_axis     = 1.0 / lambda_val * 1e-2   # wavenumber in cm^{-1}
+y_axis     = CF * 1e-12                # CF         in cm^{-6}
+y_axis_QED = CFdip * 1e-12             # CFdip      in cm^{-1}
+y_axis_EF  = EF                        # Enhancement Factor 
 
 # Create the first plot
 fig1, ax1 = plt.subplots()
 
 # Plot the CF data
-ax1.plot(x_axis, y_axis, label='CF')
+ax1.plot(x_axis, y_axis,color='k', label='CF')
 
 # Plot the QED data in red
 ax1.plot(x_axis, y_axis_QED, color='red', label='QED')
@@ -287,7 +289,7 @@ ax2.legend()
 
 # Show the second plot
 plt.show()
-
+#fig2.savefig('./EF.png', transparent=True)
 
 
 

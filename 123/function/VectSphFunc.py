@@ -1,10 +1,14 @@
 ## Array of Normalized Vector Spherical Functions (M and N)
-# Input  : kr    --- Dimensionless Radial variable
-#          nmax  --- maximum expansion order of function
-#          Rad   --- result of Spherical Bessel function
-#          NAng  --- result of NormTauPiP
-#          emphi --- array of e^(i*m*phi)
-# Output : VSF   --- value of M and N
+# Input  : 
+#    kr        |float|                         --- dimensionless Radial variable, k_i * r = (n_i * k_0) * r
+#    nmax      |int.|                          --- maximum expansion order of function
+#    Rad       |dict.|                         --- result of Spherical Bessel function, radial functions
+#    NAng      |dict.|                         --- result of NormTauPiP, angular functions
+#    emphi     |array|                         --- array of e^(i*m*phi)
+# Output : 
+#    VSF       |dict.|                         --- value of M and N
+#        ['M'] |n-by-2n+1-by-3 complex array|  --- basis function of Mie theory
+#        ['N'] |n-by-2n+1-by-3 complex array|  --- basis function of Mie theory
 
 import numpy as np
 import scipy.io as sio
@@ -36,8 +40,8 @@ def VectSphFunc(kr, nmax, Rad, NAng, emphi):
     
     # Preallocation
     VSF = {
-        'M' : np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128),
-        'N' : np.zeros((nmax, 2 * nmax + 1, 3), dtype=np.complex128)
+        'M' : np.zeros((nmax, 2*nmax + 1, 3), dtype=np.complex128),
+        'N' : np.zeros((nmax, 2*nmax + 1, 3), dtype=np.complex128)
     }
     
     # Extract Radial Functions

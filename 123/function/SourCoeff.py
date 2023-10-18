@@ -25,6 +25,7 @@ from VectSphFunc import VectSphFunc
 from TenCont_v1  import TenCont
 import scipy.io as sio
 
+'''
 #Settings = {
  #   "nmax"	     : 30,
   #  "nr"         : 1,
@@ -52,6 +53,7 @@ import scipy.io as sio
 #NAng  = NormTauPiP.NormTauPiP(Settings1.Settings1['nmax'], theta, order)
 #print(Rad)
 #print(NAng)
+'''
 
 def SourCoeff(Settings, type):
     # Variables
@@ -120,7 +122,9 @@ def SourCoeff(Settings, type):
         Source['p'] = prefactor * np.einsum('ijk, kl -> ij', VSF['N'], Settings['DOri']['Sph'])
         Source['q'] = prefactor * np.einsum('ijk, kl -> ij', VSF['M'], Settings['DOri']['Sph'])
     
-    sio.savemat('./SourCoeff_Source.mat', mdict=Source)
+    #print(Source['p'].shape)
+    #print(Source['q'].shape)
+    #sio.savemat('./SourCoeff_Source.mat', mdict=Source)
 
     return Source
 

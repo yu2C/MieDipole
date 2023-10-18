@@ -1,24 +1,31 @@
 ## Radial Functions
-# Input  : kr        --- complex argument
-#          nmax      --- maximum expansion order
-#          array     --- array mode
-#          type      --- type of functions ('bessel' or 'hankel1')
-# Output : Rad
-#           .j1      --- spherical bessel functions
-#           .psi     --- riccati - bessel functions
-#           .dpsi    --- derivatives of psi
-#           .raddpsi --- dpsi /kr
-#           .h1      --- spherical hankel functions 
-#           .xi      --- riccati - hankel functions 
-#           .dxi     --- derivatives of xi
-#           .raddxi  --- dxi/kr
-
+# Input  : 
+#    kr             |float|                --- complex argument
+#    nmax           |int.|                 --- maximum expansion order
+#    array          |int.|                 --- array mode (0 or 1)
+#    type           |str.|                 --- type of functions ('bessel' or 'hankel1')
+# Output : 
+#    Rad            |dict.|                --- radial functions
+#       ['j1']      |1-by-n complex array| --- spherical Bessel functions
+#       ['psi']     |1-by-n complex array| --- Riccati - Bessel functions
+#       ['dpsi']    |1-by-n complex array| --- derivatives of psi
+#       ['raddpsi'] |1-by-n complex array| --- dpsi / kr
+#       ['h1']      |1-by-n complex array| --- spherical Hankel functions 
+#       ['xi']      |1-by-n complex array| --- Riccati - Hankel functions 
+#       ['dxi']     |1-by-n complex array| --- derivatives of xi
+#       ['raddxi']  |1-by-n complex array| --- dxi / kr
+'''
+# Calling functions :  
+#   envj 
+#   MSTA1 
+#   MSTA2  
+#   sbesselc 
+#   rcbesselc
+'''
 
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as sio
-
-
 
 def MSTA1(z, mp):
     a0 = np.abs(z)
@@ -143,6 +150,7 @@ def sbesselc(z, n):
     return csj, csy
 
 def rcbesselc(z, n):
+    # Preallocation
     rcj  = np.zeros(n + 1, dtype=np.complex128)
     rcy  = np.zeros(n + 1, dtype=np.complex128)
     drcj = np.zeros(n + 1, dtype=np.complex128)
@@ -223,7 +231,6 @@ def rcbesselc(z, n):
     
     return rcj, rcy, drcj, drcy
 
-
 def SphBessel(kr, nmax, array, type):
     Rad = {}
 
@@ -265,7 +272,7 @@ def SphBessel(kr, nmax, array, type):
         Rad['raddpsi'] = raddZ
     
     elif type == 'hankel1':
-        if kr == 0:
+        if kr == 0: # if statement need debug
             if nmax == 0:
                 z1 = 1 - 1j * 1e300
                 Z  = -1j
@@ -276,6 +283,7 @@ def SphBessel(kr, nmax, array, type):
                 dZ    = 1j * 1e300
                 raddZ = 0
         else:
+            # spherical Bessel functions
             csj, csy = sbesselc(kr, nmax)
             
             if len(csj) < (nmax + 1) or len(csy) < (nmax + 1):
@@ -284,12 +292,13 @@ def SphBessel(kr, nmax, array, type):
             if array == 1:
                 z1 = csj[1:nmax+1] + 1j * csy[1:nmax+1]
             else:
-                z1 = csj[nmax] + 1j * csy[nmax]
+                z1 = csj[nmax]     + 1j * csy[nmax]
             
+            # Riccati-Bessel functions and their derivatives
             rcj, rcy, drcj, drcy = rcbesselc(kr, nmax)
             
             if array == 0:
-                Z     = rcj[nmax] + 1j * rcy[nmax]
+                Z     = rcj[nmax]  + 1j * rcy[nmax]
                 dZ    = drcj[nmax] + 1j * drcy[nmax]
                 raddZ = dZ / kr
             else:
@@ -297,7 +306,7 @@ def SphBessel(kr, nmax, array, type):
                 rcy   = rcy[1:]
                 drcj  = drcj[1:]
                 drcy  = drcy[1:]
-                Z     = rcj + 1j * rcy
+                Z     = rcj  + 1j * rcy
                 dZ    = drcj + 1j * drcy
                 raddZ = dZ / kr
         
