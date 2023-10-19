@@ -7,6 +7,7 @@ import json
 #from Settings1 import Settings
 from ReadSettings_v1 import ReadSettings
 from SingleGR0_v1    import SingleGR0
+from SingleGR1       import SingleGR1
 from datetime        import datetime
 from C2S             import C2S
 from VecTrans        import VecTrans
@@ -124,7 +125,7 @@ Etot     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
 NormEtot = np.zeros((Settings['nn'], 3), dtype=np.complex128)
 Edip     = np.zeros((Settings['nn'], 3), dtype=np.complex128)
 if Settings['ModeName'] == 'wavelength':
-    EScat    = np.zeros((Settings['nn'], 3))
+    EScat    = np.zeros((Settings['nn'], 3), dtype=np.complex128)
     ImG      = np.zeros((Settings['nn'], 1))
     Purcell  = np.zeros((Settings['nn'], 1))
     if not np.array_equal(Settings['APos']['Cart'], Settings['DPos']['Cart']):
@@ -156,20 +157,18 @@ if Settings['ModeName'] == 'wavelength':
         # Determine which function is called by the acceptor position
         if np.array_equal(Settings['APos']['Cart'], Settings['DPos']['Cart']):
             if Settings['BC'] == 'simplecavity':
-                Output = "error" #SingleGR1(Settings)
+                Output = SingleGR1(Settings)
             else:
                 Output = SingleGR0(Settings)
 
-            EScat[ii, :] = Output['EScat'].T
-            ImG[ii]      = Output['ImG'].T
-            Purcell[ii]  = Output['Purcell'].T
+            EScat[ii, :] = (Output['EScat']).T
+            ImG[ii, :]      = (Output['ImG']).T
+            Purcell[ii, :]  = (Output['Purcell']).T
         else:
             if Settings['APos']['Sph'][0] >= Settings['rbc'][0]:
                 Output = TwoGR0(Settings)
-                #print('TwoGR0')
             else:
                 Output = TwoGR1(Settings)
-                #print('TwoGR1')
 
             ImG_vec[ii, :]  = (np.imag(Output['G'])).T
             Etot[ii, :]     = (Output['Etot']).T
@@ -200,140 +199,244 @@ if Settings['ModeName'] == 'wavelength':
     elif Settings['Quantity'] == 'Purcell':
         pass
     elif Settings['Quantity'] == 'ImG':
-        if 'ImG_vec' in locals(): ####
-            ImG = ImG_vec * Settings['AOri']['Sph']
+        if 'ImG_vec' in locals(): 
+            ImG = ImG_vec @ Settings['AOri']['Sph']
     elif Settings['Quantity'] == 'J':
-        if 'ImG_vec' in locals():
-            ImG = ImG_vec * Settings['AOri']['Sph']
+        #ImG = ImG_vec @ Settings['AOri']['Sph']
+        
         c        = 2.9979e8
         Debye    = 3.33564e-30
         epsilon0 = 8.854187817e-12
         hbar     = 1.05457182e-34
         const    = ((2 * np.pi * 1239.84193 / (lambda_val * 1e9) * 2.4179893e14) ** 2
                     / c ** 2 * Debye ** 2 / (np.pi * hbar * epsilon0))
-        J = const * ImG
+        J = const.reshape(-1, 1) * ImG
+
         
         
 
 
 # plot CF
 
-
-# Your data for the first plot (I'm assuming lambda_val, CF, and CFdip are already defined)
-x_axis     = 1.0 / lambda_val * 1e-2   # wavenumber in cm^{-1}
-y_axis     = CF * 1e-12                # CF         in cm^{-6}
-y_axis_QED = CFdip * 1e-12             # CFdip      in cm^{-1}
-y_axis_EF  = EF                        # Enhancement Factor 
-
-# Create the first plot
-fig1, ax1 = plt.subplots()
-
-# Plot the CF data
-ax1.plot(x_axis, y_axis,color='k', label='CF')
-
-# Plot the QED data in red
-ax1.plot(x_axis, y_axis_QED, color='red', label='QED')
-
-# Set x and y labels
-ax1.set_xlabel(r'wavenumber cm$^{-1}$')
-ax1.set_ylabel('CF')
-
-# Set the y-axis to log scale
-ax1.set_yscale('log')
-
-# Find minimum and maximum y-values among both datasets
-y_min = min(np.min(y_axis), np.min(y_axis_QED))
-y_max = max(np.max(y_axis), np.max(y_axis_QED)) + 0.2e+33
-
-# Set y-axis limits based on min and max values
-ax1.set_ylim(y_min, y_max)
-
-# Set x-axis limits
-ax1.set_xlim(14285, 33333)
-
-# Add a title
-ax1.set_title('CF and QED')
-
-# Add a legend
-ax1.legend()
-
-# Show the first plot
-plt.show()
-
-# Create the second plot
-fig2, ax2 = plt.subplots()
-
-# Plot the EF data
-ax2.plot(x_axis, y_axis_EF, label='EF')
-
-# Set x and y labels
-ax2.set_xlabel(r'wavenumber cm$^{-1}$')
-ax2.set_ylabel('EF')
-
-ax2.set_yscale('log')  
-
-# Set new y-axis limits for EF data
-y_min_EF = np.min(y_axis_EF)
-y_max_EF = np.max(y_axis_EF) + 0.3e+2
-
-ax2.set_ylim(1e-3, 1e+5)
-
-# Set x-axis limits to be the same as the first plot
-ax2.set_xlim(14285, 33333)
-
-# Add a title
-ax2.set_title('EF')
-
-# Add a legend
-ax2.legend()
-
-# Show the second plot
-plt.show()
-#fig2.savefig('./EF.png', transparent=True)
-
-
-
-'''
 if Settings['ModeName'] == 'wavelength':
     if Settings['Quantity'] == 'CF':
-        fplot = {}
-        fplot['x'] = 1.0 / lambda_val * 1e-2
-        fplot['y'] = CF * 1e-12
-        MyPlot(fplot, Resize, 0)
-        
-        fplot['y'] = CFdip * 1e-12
-        fplot['colorstyle'] = 'r-'
-        MyPlot(fplot, Resize, 1)
-        
-        if Settings['BC'] == 'sphere':
-            plt.legend(['Single Sphere', 'Vacuum (QED)'], loc='best')
-        elif Settings['BC'] == 'coreshell':
-            plt.legend(['Core/Shell Sphere', 'Vacuum (QED)'], loc='best')
-        
-        fplot['y'] = EF
-        fplot['colorstyle'] = '-'
-        fplot['range'] = [float('-inf'), float('inf'), 1e-3, 1e5]
-        fplot['ylabel'] = 'Enhancement'
-        MyPlot(fplot, Resize, 0)
-        
-        if Settings['BC'] == 'sphere':
-            plt.legend(['Single Sphere'], loc='best')
-        elif Settings['BC'] == 'coreshell':
-            plt.legend(['Core/Shell Sphere'], loc='best')
-    
+        # Your data for the first plot (I'm assuming lambda_val, CF, and CFdip are already defined)
+        x_axis     = 1.0 / lambda_val * 1e-2   # wavenumber in cm^{-1}
+        y_axis     = CF * 1e-12                # CF         in cm^{-6}
+        y_axis_QED = CFdip * 1e-12             # CFdip      in cm^{-1}
+        y_axis_EF  = EF                        # Enhancement Factor 
+
+        # Create the first plot
+        fig1, ax1 = plt.subplots()
+
+        # Plot the CF data
+        ax1.plot(x_axis, y_axis,color='k', label='CF')
+
+        # Plot the QED data in red
+        ax1.plot(x_axis, y_axis_QED, color='red', label='QED')
+
+        # Set x and y labels
+        ax1.set_xlabel(r'wavenumber cm$^{-1}$')
+        ax1.set_ylabel('CF')
+
+        # Set the y-axis to log scale
+        ax1.set_yscale('log')
+
+        # Find minimum and maximum y-values among both datasets
+        y_min = min(np.min(y_axis), np.min(y_axis_QED))
+        y_max = max(np.max(y_axis), np.max(y_axis_QED)) + 0.2e+33
+
+        # Set y-axis limits based on min and max values
+        ax1.set_ylim(y_min, y_max)
+
+        # Set x-axis limits
+        ax1.set_xlim(14285, 33333)
+
+        # Add a title
+        ax1.set_title('CF and QED')
+
+        # Add a legend
+        ax1.legend()
+
+        # Show the first plot
+        plt.show()
+
+        # Create the second plot
+        fig2, ax2 = plt.subplots()
+
+        # Plot the EF data
+        ax2.plot(x_axis, y_axis_EF, label='EF')
+
+        # Set x and y labels
+        ax2.set_xlabel(r'wavenumber cm$^{-1}$')
+        ax2.set_ylabel('EF')
+
+        ax2.set_yscale('log')  
+
+        # Set new y-axis limits for EF data
+        y_min_EF = np.min(y_axis_EF)
+        y_max_EF = np.max(y_axis_EF) + 0.3e+2
+
+        ax2.set_ylim(1e-3, 1e+5)
+
+        # Set x-axis limits to be the same as the first plot
+        ax2.set_xlim(14285, 33333)
+
+        # Add a title
+        ax2.set_title('EF')
+
+        # Add a legend
+        ax2.legend()
+
+        # Show the second plot
+        plt.show()
+        #fig2.savefig('./EF.png', transparent=True)
     elif Settings['Quantity'] == 'Purcell':
-        fplot['x'] = 1239.84193 / (lambda_val * 1e9)
-        fplot['y'] = Purcell
-        MyPlot(fplot, Resize, 0)
-    
+        x_axis = 1239.84193 / (lambda_val * 1e9)
+        y_axis = Purcell
+        
+        fig1, ax1 = plt.subplots()
+
+        # Plot the Purcell data
+        ax1.plot(x_axis, y_axis,color='k', label='Purcell')
+
+        # Set x and y labels
+        ax1.set_xlabel(r'wavenumber (cm$^{-1}$)')
+        ax1.set_ylabel('Purcell Factor')
+
+        # Set the y-axis to log scale
+        ax1.set_yscale('log')
+
+        # Find minimum and maximum y-values among both datasets
+        #y_min = min(np.min(y_axis))
+        #y_max = max(np.max(y_axis)) + 0.2e+33
+
+        # Set y-axis limits based on min and max values
+        ax1.set_ylim(min(y_axis), max(y_axis*1.01))
+
+        # Set x-axis limits
+        ax1.set_xlim(min(x_axis), max(x_axis))
+
+        # Add a title
+        ax1.set_title('Purcell Factor')
+
+        # Add a legend
+        ax1.legend()
+
+        # Show the first plot
+        plt.show()
     elif Settings['Quantity'] == 'ImG':
-        fplot['x'] = 1239.84193 / (lambda_val * 1e9)
-        fplot['y'] = ImG
-        MyPlot(fplot, Resize, 0)
-    
+        x_axis = 1239.84193 / (lambda_val * 1e9)
+        y_axis = ImG
+        
+        fig1, ax1 = plt.subplots()
+
+        # Plot the Purcell data
+        ax1.plot(x_axis, y_axis,color='k', label='ImG')
+
+        # Set x and y labels
+        ax1.set_xlabel(r'wavenumber (cm$^{-1}$)')
+        ax1.set_ylabel('ImG')
+
+        # Set the y-axis to log scale
+        ax1.set_yscale('log')
+
+        # Find minimum and maximum y-values among both datasets
+        #y_min = min(np.min(y_axis))
+        #y_max = max(np.max(y_axis)) + 0.2e+33
+
+        # Set y-axis limits based on min and max values
+        ax1.set_ylim(min(y_axis), max(y_axis*1.01))
+
+        # Set x-axis limits
+        ax1.set_xlim(min(x_axis), max(x_axis))
+
+        # Add a title
+        ax1.set_title('ImG')
+
+        # Add a legend
+        ax1.legend()
+
+        # Show the first plot
+        plt.show()
     elif Settings['Quantity'] == 'J':
-        fplot['x'] = 1239.84193 / (lambda_val * 1e9)
-        fplot['y'] = J
-        MyPlot(fplot, Resize, 0)
+        x_axis = 1239.84193 / (lambda_val * 1e9)
+        y_axis = J
+        
+        fig1, ax1 = plt.subplots()
+
+        # Plot the Purcell data
+        ax1.plot(x_axis, y_axis,color='k', label='J')
+
+        # Set x and y labels
+        ax1.set_xlabel(r'wavenumber (cm$^{-1}$)')
+        ax1.set_ylabel('J')
+
+        # Set the y-axis to log scale
+        ax1.set_yscale('log')
+
+        # Find minimum and maximum y-values among both datasets
+        #y_min = min(np.min(y_axis))
+        #y_max = max(np.max(y_axis)) + 0.2e+33
+
+        # Set y-axis limits based on min and max values
+        ax1.set_ylim(min(y_axis), max(y_axis*1.01))
+
+        # Set x-axis limits
+        ax1.set_xlim(min(x_axis), max(x_axis))
+
+        # Add a title
+        ax1.set_title('J')
+
+        # Add a legend
+        ax1.legend()
+
+        # Show the first plot
+        plt.show()
+
+
+
 '''
+        if Settings['ModeName'] == 'wavelength':
+            if Settings['Quantity'] == 'CF':
+                fplot = {}
+                fplot['x'] = 1.0 / lambda_val * 1e-2
+                fplot['y'] = CF * 1e-12
+                MyPlot(fplot, Resize, 0)
+                
+                fplot['y'] = CFdip * 1e-12
+                fplot['colorstyle'] = 'r-'
+                MyPlot(fplot, Resize, 1)
+                
+                if Settings['BC'] == 'sphere':
+                    plt.legend(['Single Sphere', 'Vacuum (QED)'], loc='best')
+                elif Settings['BC'] == 'coreshell':
+                    plt.legend(['Core/Shell Sphere', 'Vacuum (QED)'], loc='best')
+                
+                fplot['y'] = EF
+                fplot['colorstyle'] = '-'
+                fplot['range'] = [float('-inf'), float('inf'), 1e-3, 1e5]
+                fplot['ylabel'] = 'Enhancement'
+                MyPlot(fplot, Resize, 0)
+                
+                if Settings['BC'] == 'sphere':
+                    plt.legend(['Single Sphere'], loc='best')
+                elif Settings['BC'] == 'coreshell':
+                    plt.legend(['Core/Shell Sphere'], loc='best')
+            
+            elif Settings['Quantity'] == 'Purcell':
+                fplot['x'] = 1239.84193 / (lambda_val * 1e9)
+                fplot['y'] = Purcell
+                MyPlot(fplot, Resize, 0)
+            
+            elif Settings['Quantity'] == 'ImG':
+                fplot['x'] = 1239.84193 / (lambda_val * 1e9)
+                fplot['y'] = ImG
+                MyPlot(fplot, Resize, 0)
+            
+            elif Settings['Quantity'] == 'J':
+                fplot['x'] = 1239.84193 / (lambda_val * 1e9)
+                fplot['y'] = J
+                MyPlot(fplot, Resize, 0)
+        '''
 

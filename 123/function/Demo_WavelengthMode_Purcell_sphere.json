@@ -1,12 +1,12 @@
 {
   "Settings" : {
 	  "ModeName"   : "wavelength",
-	  "Quantity"   : "CF",
+	  "Quantity"   : "Purcell",
 	  "DPos"	   : {
 		  "Cart"   : [0, 0, 80e-9]
 	  },
 	  "APos"	   : {
-		  "Cart"   : [0, 0, -80e-9]
+		  "Cart"   : [0, 0, 80e-9]
 	  },
 	  "DOri"	   : {
 		  "Cart"   : [0, 0, 1]
@@ -14,9 +14,9 @@
 	  "AOri"	   : {
 		  "Cart"   : [0, 0, 1]
 	  },
-	  "nmax"	   : 70,
+	  "nmax"	   : 30,
 	  "BC"		   : "sphere",
-	  "rbc"		   : [60e-9],
+	  "rbc"		   : 60e-9,
 	  "Dpstrength" : 1
     },
   "tmp_set"	 : {
@@ -24,15 +24,14 @@
 	  "lambda_s"   : 300e-9,
 	  "lambda_e"   : 700e-9,
 	  "epsi0"	   : 1,
-	  "epsi1"	   : "./Ag_JPCL.csv",
-	  "epsi2"	   : ".\\InputFiles\\DielectricFunctions\\Ag_JPCL.csv"
+	  "epsi1"	   : ".\\InputFiles\\DielectricFunctions\\Ag_JPCL.csv"
     },
   "fplot"	 : {
 	  "colorstyle" : "-k",
 	  "range" 	   : [null,null,null,null],
 	  "yscale"     : "log",
 	  "xlabel"	   : "$\\mathrm{Wavenumber}~(\\mathrm{cm}^{-1})$",
-	  "ylabel"	   : "$\\mathrm{Coupling~Factor}~(\\mathrm{cm}^{-6})$",
+	  "ylabel"	   : "$\\mathrm{Purcell~Factor}$",
 	  "subaxis"    : 1,
 	  "subrange"   : [null,null,null,null],
 	  "subxlabel"  : "$\\mathrm{Wavelength}~(\\mathrm{nm})$"

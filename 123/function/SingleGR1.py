@@ -1,80 +1,122 @@
-## For simplecavity
-# Input : 
-#    Settings
-#
+## Single-Point Green's Function in Region 1
+# Input  : 
+#    Settings           |dict.|                      --- dictionary
+# !      ['nmax']       |int.|                       --- maximum expansion order
+# !      ['nr']         |1-by-p complex array|*      --- relative refractive index
+# !      ['k0']         |float|                      --- angular wavenumber in vacuum
+# !      ['k0s']        |float|                      --- k_0 * rbc (radius of boundary)
+# !      ['BC']         |string|                     --- boundary condition
+# !      ['DPos']       |dict.|                      --- donor position
+# !          ['Sph']    |3-by-1 array|               --- in spherical coord.
+# !          ['Cart']   |3-by-1 array|               --- in Cartesian coord.
+# !      ['APos']       |dict.|                      --- acceptor position
+# !          ['Sph']    |3-by-1 array|               --- in spherical coord.
+# !          ['Sph2']   |3-by-1 array|               --- in S2 coord.
+# !          ['Cart']   |3-by-1 array|               --- in Cartesian coord.
+# !      ['DOri']       |dict.|                      --- orientation of the donor dipole
+# !          ['Cart']   |3-by-1 array|               --- in Cartesian coord.
+#        ['DRad']       |dict.|                      --- donor radial func.
+#            ['h1']     |1-by-n complex array|       --- spherical Bessel func.
+#            ['raddxi'] |1-by-n complex array|       --- dxi/kr
+#        ['DNAng']      |dict.|                      --- donor normalized Tau, Pi, and P
+#            ['NTau']   |n-by-(2n+1) complex array|  --- normalized Tau 
+#            ['NPi']    |n-by-(2n+1) complex array|  --- normalized Pi 
+#            ['NP']     |n-by-(2n+1) complex array|  --- normalized P 
+#        ['emphi']      |n-by-(2n+1) complex array|  --- normalized azimuthal func.
+#        ['Source']     |dict.|                      --- source expansion coefficients
+#            ['r']      |n-by-(2n+1) complex array|  --- coefficient r
+#            ['s']      |n-by-(2n+1) array|          --- coefficient s
+#        ['Layer0']     |dict.|                      --- Mie coefficients
+#            ['delta']  |1-by-n complex array|       --- Mie coefficient delta
+#            ['gamma']  |1-by-n complex array|       --- Mie coefficient gamma
+# Output : 
+#    Output             |dict.|                      --- storage of output data
+#        ['Escat']      |3-by-1 complex array|       --- scattering part at DPos
+#        ['ImG']        |float|                      --- donor imaginary green's function 
+#        ['Purcell']    |float|                      --- Purcell factor at DPos
+# Temporary data :
+#    Temp               |dict.|                      --- storage of temporary data
+#        ['DVSF']       |dict.|                      --- donor vector spherical func.
+#            ['M']      |n-by-(2n+1) complex array|  --- donor vector spherical func. M
+#            ['N']      |n-by-(2n+1) complex array|  --- donor vector spherical func. N
+#        ['Layer0M']    |3-by-1 array|               --- M scattering contribution
+#        ['Layer0N']    |3-by-1 complex array|       --- N scattering contribution
+# Calling functions : 
+#    NormTauPiP
+#    SourCoeff
+#    MieSingle
+#    VectSphFunc
+#    SphBessel
+# ---------------------------------------------------------------------------------------------
+# ! : necessary parameters
+# * : p = 2 (single sphere), p = 3 (core/shell sphere)
 import numpy as np
-import numpy as np
-from NormTauPiP import NormTauPiP
-from SourCoeff import SourCoeff
-from MieSingle import MieSingle
+from NormTauPiP  import NormTauPiP
+from SourCoeff   import SourCoeff
+from MieSingle   import MieSingle
 from VectSphFunc import VectSphFunc
-from SphBessel import SphBessel
-from Settings1 import Settings
+from SphBessel   import SphBessel
+#from Settings1   import Settings
 
-def SingleGR1(settings):
-    nmax = settings['nmax']
-    rhoD = settings['nr'][1] * settings['k0'] * settings['DPos']['Sph'][0]
+def SingleGR1(Settings):
+    Temp = {}
+    Output = {}
+    nmax = Settings['nmax']
+    rhoD = Settings['nr'][1] * Settings['k0'] * Settings['DPos']['Sph'][0]
 
-    # Radial Functions for Donor
-    if 'DRad' not in settings:
-        settings['DRad'] = SphBessel(rhoD, nmax, 1, 'bessel')
+    # Radial Functions for Donor (need to be computed at each freq.)
+    #if 'DRad' not in Settings:
+    Settings['DRad'] = SphBessel(rhoD, nmax, 1, 'bessel')
 
-    # Angular Functions
-    if 'DNAng' not in settings:
-        settings['DNAng'] = NormTauPiP(nmax, settings['DPos']['Sph'][1], 'reversed')
+    # Angular Functions (not need to be computed at each freq.)
+    if 'DNAng' not in Settings:
+        Settings['DNAng'] = NormTauPiP(nmax, Settings['DPos']['Sph'][1], 'reversed')
 
-    if 'DNAngN' not in settings:
-        settings['DNAngN'] = NormTauPiP(nmax, settings['DPos']['Sph'][1], 'normal')
+    if 'DNAngN' not in Settings:
+        Settings['DNAngN'] = NormTauPiP(nmax, Settings['DPos']['Sph'][1], 'normal')
 
-    # Mie Coefficients
-    if 'Source' not in settings:
-        settings['Source'] = SourCoeff(settings, "Green's function only")
-
-    if 'Layer1' not in settings:
-        if settings['BC'] == 'sphere':
-            settings['Layer1'] = MieSingle(settings['nr'], settings['k0s'], nmax)
-        elif settings['BC'] == 'coreshell':
-            settings['Layer1'] = "error" #MieCoreShell(settings['nr'], settings['k0s'], nmax)
-        elif settings['BC'] == 'simplecavity':
-            settings['Layer1'] = "error" #MieSimCav(settings['nr'], settings['k0s'], nmax)
-        
-        #print(Settings['Source']['r'].shape)
-        #print(Settings['Source']['s'].shape)
-
-        #print(Settings['Layer1']['delta'].shape)
-        #print(Settings['Layer1']['gamma'].shape)
-
-        settings['Layer1']['d'] = settings['Source']['r'] * settings['Layer1']['delta'].reshape((nmax, 1), order='F')
-        settings['Layer1']['c'] = settings['Source']['s'] * settings['Layer1']['gamma'].reshape((nmax, 1), order='F')
-        #settings['Layer1']['d'] = np.einsum('i,j->ij', settings['Source']['r'].T, settings['Layer1']['delta'])
-        #settings['Layer1']['c'] = np.einsum('i,j->i', settings['Source']['s'].T, settings['Layer1']['gamma'])
-
-
-    # Azimuthal Functions
-    if 'emphi' not in settings:
+    # Azimuthal Functions (not need to be computed at each freq.)
+    if 'emphi' not in Settings:
         emphi = np.sqrt(1/(2*np.pi))
 
+    # Source Coefficients (need to be computed at each freq.)
+    #if 'Source' not in Settings:
+    Settings['Source'] = SourCoeff(Settings, "Green's function only")
+    
+    # Mie Coefficients (need to be computed at each freq.)
+    #if 'Layer1' not in Settings:
+    if Settings['BC'] == 'sphere':
+        Settings['Layer1'] = MieSingle(Settings['nr'], Settings['k0s'], nmax)
+    elif Settings['BC'] == 'coreshell':
+        Settings['Layer1'] = "error" #MieCoreShell(Settings['nr'], Settings['k0s'], nmax)
+    elif Settings['BC'] == 'simplecavity':
+        Settings['Layer1'] = "error" #MieSimCav(Settings['nr'], Settings['k0s'], nmax)
+        
+    #print(Settings['Source']['r'].shape)
+    #print(Settings['Source']['s'].shape)
+    #print(Settings['Layer1']['delta'].shape)
+    #print(Settings['Layer1']['gamma'].shape)
+
+    Settings['Layer1']['d'] = Settings['Source']['r'] * (Settings['Layer1']['delta'].reshape(-1, 1))
+    Settings['Layer1']['c'] = Settings['Source']['s'] * (Settings['Layer1']['gamma'].reshape(-1, 1))
+
     # Generating M and N Fields
-    temp_dvsf = VectSphFunc(rhoD, nmax, settings['DRad'], settings['DNAngN'], emphi)
+    Temp['DVSF'] = VectSphFunc(rhoD, nmax, Settings['DRad'], Settings['DNAngN'], emphi)
 
     # Summing All order of the Scattering Field
-    temp_layer0m = np.sum(temp_dvsf['M'] * settings['Layer1']['c'].reshape((nmax, 2*nmax+1, 1), order='F'), axis=(1, 2)).reshape((nmax, 1), order='F')
-    temp_layer0n = np.sum(temp_dvsf['N'] * settings['Layer1']['d'].reshape((nmax, 2*nmax+1, 1), order='F'), axis=(1, 2)).reshape((nmax, 1), order='F')
+    Temp['Layer0M'] = (np.einsum('ijk,ij->k', Temp['DVSF']['M'], Settings['Layer1']['c'])).reshape((3, 1), order='F')
+    Temp['Layer0N'] = (np.einsum('ijk,ij->k', Temp['DVSF']['N'], Settings['Layer1']['d'])).reshape((3, 1), order='F')
 
     # Scattering Part at the Donor Position
-    output_escat = temp_layer0m + temp_layer0n
+    Output['EScat'] = Temp['Layer0M'] + Temp['Layer0N']
 
     # DOri.ImG.Dori
-    print(output_escat.shape)
-    print(settings['DOri']['Sph'].shape)
-    output_img = settings['k0']/(6*np.pi) + np.imag(output_escat @ settings['DOri']['Sph'].T)
+    Output['ImG'] = Settings['k0'] / 6 / np.pi + np.imag((Output['EScat']).T * Settings['DOri']['Sph'])
 
     # Purcell Factor
-    output_purcell = (6*np.pi/settings['k0']) * output_img
-    print(output_escat.shape)
-    print(output_img.shape)
-    print(output_purcell.shape)
-   
-    return {'EScat': output_escat, 'ImG': output_img, 'Purcell': output_purcell}
+    Output['Purcell'] = 6 * np.pi / Settings['k0'] * Output['ImG']
 
-print(SingleGR1(Settings))
+   
+    return Output
+
+#print(SingleGR1(Settings))
