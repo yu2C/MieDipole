@@ -16,7 +16,7 @@
 	  },
 	  "nmax"	   : 70,
 	  "BC"		   : "sphere",
-	  "rbc"		   : 60e-9,
+	  "rbc"		   : [60e-9],
 	  "Dpstrength" : 1
     },
   "tmp_set"	 : {
@@ -24,7 +24,7 @@
 	  "lambda_s"   : 300e-9,
 	  "lambda_e"   : 700e-9,
 	  "epsi0"	   : 1,
-	  "epsi1"	   : ".\\InputFiles\\DielectricFunctions\\Ag_JPCL.csv"
+	  "epsi1"	   : "./Ag_JPCL.csv"
     },
   "fplot"	 : {
 	  "colorstyle" : "-",

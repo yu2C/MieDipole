@@ -32,6 +32,19 @@ NAng  = NormTauPiP.NormTauPiP(nmax, theta, order)
 '''
 
 def VectSphFunc(kr, nmax, Rad, NAng, emphi):
+    '''
+    Array of Normalized Vector Spherical Functions (M and N)
+    Input  : 
+        kr        |float|                         --- dimensionless Radial variable, k_i * r = (n_i * k_0) * r
+        nmax      |int.|                          --- maximum expansion order of function
+        Rad       |dict.|                         --- result of Spherical Bessel function, radial functions
+        NAng      |dict.|                         --- result of NormTauPiP, angular functions
+        emphi     |array|                         --- array of e^(i*m*phi)
+    Output : 
+        VSF       |dict.|                         --- value of M and N
+            ['M'] |n-by-2n+1-by-3 complex array|  --- basis function of Mie theory
+            ['N'] |n-by-2n+1-by-3 complex array|  --- basis function of Mie theory
+    '''
     #Rad   = SphBessel.Rad(kr, nmax, array, type)
     #NAng  = NormTauPiP.NAng(nmax, theta, order)
     #sio.savemat('./VectSphFunc_Rad.mat', mdict=Rad)

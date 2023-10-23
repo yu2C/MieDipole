@@ -24,7 +24,7 @@ sys.path.append('./Functions/')
 
 # File to be calculated
 FilePath = './' #'./123/function/'#'./InputFiles/'  # Folder Path of Input Files
-FileName = 'Demo_WavelengthMode_CF_PCRET'  # File Name
+FileName = 'Demo_WavelengthMode_CF_sphere'  # File Name
 
 # Output Figure Size (value = 0~1)
 Resize = 0.5
@@ -161,7 +161,7 @@ if Settings['ModeName'] == 'wavelength':
             else:
                 Output = SingleGR0(Settings)
 
-            EScat[ii, :] = (Output['EScat']).T
+            EScat[ii, :]    = (Output['EScat']).T
             ImG[ii, :]      = (Output['ImG']).T
             Purcell[ii, :]  = (Output['Purcell']).T
         else:
@@ -177,8 +177,10 @@ if Settings['ModeName'] == 'wavelength':
 
         # Information
         #print(f'Progress: {((ii + 1) / Settings["nn"]) * 100:.2f}%')
-        
 
+############################################################################
+############################################################################
+## Post-processing
 if Settings['ModeName'] == 'wavelength':
     if Settings['Quantity'] == 'CF':
         # Coupling Factor
@@ -195,12 +197,24 @@ if Settings['ModeName'] == 'wavelength':
             'NormEtot_py' : NormEtot,
             'EF_py'       : EF,
         }
-        #sio.savemat('./main_result.mat', mdict=Result)
+        sio.savemat('./main_result.mat', mdict=Result)
     elif Settings['Quantity'] == 'Purcell':
-        pass
+        Result = {
+            'EScat_py'   : EScat,
+            'ImG_py'     : ImG,
+            'Purcell_py' : Purcell
+        }
+        sio.savemat('./main_result.mat', mdict=Result)
     elif Settings['Quantity'] == 'ImG':
         if 'ImG_vec' in locals(): 
             ImG = ImG_vec @ Settings['AOri']['Sph']
+        
+        Result = {
+            'EScat_py'   : EScat,
+            'ImG_py'     : ImG,
+            'Purcell_py' : Purcell
+        }
+        sio.savemat('./main_result.mat', mdict=Result)
     elif Settings['Quantity'] == 'J':
         #ImG = ImG_vec @ Settings['AOri']['Sph']
         
@@ -211,13 +225,14 @@ if Settings['ModeName'] == 'wavelength':
         const    = ((2 * np.pi * 1239.84193 / (lambda_val * 1e9) * 2.4179893e14) ** 2
                     / c ** 2 * Debye ** 2 / (np.pi * hbar * epsilon0))
         J = const.reshape(-1, 1) * ImG
+        Result = {
+            'J_py'   : J,
+        }
+        sio.savemat('./main_result.mat', mdict=Result)
 
-        
-        
-
-
-# plot CF
-
+############################################################################
+############################################################################
+## Plot Figures
 if Settings['ModeName'] == 'wavelength':
     if Settings['Quantity'] == 'CF':
         # Your data for the first plot (I'm assuming lambda_val, CF, and CFdip are already defined)
