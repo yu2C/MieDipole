@@ -86,8 +86,10 @@ def TwoGR0(Settings):
     nmax = Settings['nmax']
     rhoD = Settings['nr'][0] * Settings['k0'] * Settings['DPos']['Sph'][0] # float number k_i * r = (n_i * k_0) * r
     rhoA = Settings['nr'][0] * Settings['k0'] * Settings['APos']['Sph'][0] # float number k_i * r = (n_i * k_0) * r
-    rhoD = rhoD[0] # convert the array to float
-    rhoA = rhoA[0] # convert the array to float
+    
+    if Settings['ModeName'] == 'wavelength':
+        rhoD = rhoD[0] # convert the array to float
+        rhoA = rhoA[0] # convert the array to float
     '''
     # print("TwoGR0 rhoD : ")
     # print(rhoD)
@@ -198,6 +200,8 @@ def TwoGR0(Settings):
                 #print(Settings['APos']['Sph2'])
                 #print(Settings['DOri']['Cart'])
         '''
+        print("TwoGR0 Settings['APos']['Sph2'] : ")
+        print(Settings['APos']['Sph2'].shape)
         Settings['EdipS2'] = EdipField(Settings['nr'][0], Settings['k0'], Settings['APos']['Sph2'], Settings['DOri']['Cart'])
 
         # Transforming to the Primary Coordinate (need to be computed at each freq.)

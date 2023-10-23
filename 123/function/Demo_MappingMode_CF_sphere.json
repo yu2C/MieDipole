@@ -5,12 +5,18 @@
 	  "DPos"	   : {
 		  "Cart"   : [0, 0, 80e-9]
 	  },
+	  "APos"	   : {
+		  "Cart"   : []
+	  },
 	  "DOri"	   : {
 		  "Cart"   : [0, 0, 1]
 	  },
+	  "AOri"	   : {
+		  "Cart"   : []
+	  },
 	  "nmax"	   : 50,
 	  "BC"		   : "sphere",
-	  "rbc"		   : 60e-9,
+	  "rbc"		   : [60e-9],
 	  "Dpstrength" : 1
     },
   "tmp_set"	 : {
@@ -18,7 +24,7 @@
 	  "lambda_i"   : 405e-9,
 	  "lambda_f"   : 405e-9,
 	  "epsi0"	   : 1,
-	  "epsi1"	   : ".\\InputFiles\\DielectricFunctions\\Ag_JPCL",
+	  "epsi1"	   : "./Ag_JPCL.csv",
 	  "x_points"   : 101,
 	  "x_start"    : -300e-9,
 	  "x_end"      :  300e-9,

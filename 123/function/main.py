@@ -13,6 +13,8 @@ from C2S             import C2S
 from VecTrans        import VecTrans
 from NormTauPiP      import NormTauPiP
 from SphBessel       import SphBessel
+from MieSingle       import MieSingle
+from SourCoeff       import SourCoeff
 from TwoGR0          import TwoGR0
 from TwoGR1          import TwoGR1
 
@@ -24,7 +26,7 @@ sys.path.append('./Functions/')
 
 # File to be calculated
 FilePath = './' #'./123/function/'#'./InputFiles/'  # Folder Path of Input Files
-FileName = 'Demo_WavelengthMode_CF_sphere'  # File Name
+FileName = 'Demo_MappingMode_CF_sphere'  # File Name
 
 # Output Figure Size (value = 0~1)
 Resize = 0.5
@@ -91,28 +93,78 @@ Settings['DPos']['Sph'] = C2S(Settings['DPos']['Cart'])
 Settings['DOri']['Sph'] = VecTrans(Settings['DOri']['Cart'], Settings['DPos']['Sph'][1:3], 'C2S')
 
 # for wavelength mode
-# Times of the 'for loop'
-#print(Settings['nr'].shape)
-Settings['nn'] = Settings['nr'].shape[0]
-#print(Settings['nn'])
+if Settings['ModeName'] == 'wavelength':
+    # Times of the 'for loop'
+    #print(Settings['nr'].shape)
+    Settings['nn'] = Settings['nr'].shape[0]
+    #print(Settings['nn'])
 
-#print("Main Settings['nn']")
-#print(Settings['nn'])
-#print("Main Settings['nr']")
-#print(Settings['nr'].shape)
+    #print("Main Settings['nn']")
+    #print(Settings['nn'])
+    #print("Main Settings['nr']")
+    #print(Settings['nr'].shape)
 
-# Coordinate Transformation
-Settings['APos']['Sph']  = C2S(Settings['APos']['Cart'])
-Settings['AOri']['Sph']  = VecTrans(Settings['AOri']['Cart'], Settings['APos']['Sph'][1:3], 'C2S')
-Settings['APos']['Sph2'] = C2S(Settings['APos']['Cart'] - Settings['DPos']['Cart'])
+    # Coordinate Transformation
+    Settings['APos']['Sph']  = C2S(Settings['APos']['Cart'])
+    Settings['AOri']['Sph']  = VecTrans(Settings['AOri']['Cart'], Settings['APos']['Sph'][1:3], 'C2S')
+    Settings['APos']['Sph2'] = C2S(Settings['APos']['Cart'] - Settings['DPos']['Cart'])
 
-# Angular Functions
-Settings['DNAng'] = NormTauPiP(Settings['nmax'], Settings['DPos']['Sph'][1], 'reversed')
-Settings['ANAng'] = NormTauPiP(Settings['nmax'], Settings['APos']['Sph'][1], 'normal')
+    # Angular Functions
+    Settings['DNAng'] = NormTauPiP(Settings['nmax'], Settings['DPos']['Sph'][1], 'reversed')
+    Settings['ANAng'] = NormTauPiP(Settings['nmax'], Settings['APos']['Sph'][1], 'normal')
 
 
-#sio.savemat('./main_DNAng.mat', mdict=Settings['DNAng'])
-#sio.savemat('./main_ANAng.mat', mdict=Settings['ANAng'])
+    #sio.savemat('./main_DNAng.mat', mdict=Settings['DNAng'])
+    #sio.savemat('./main_ANAng.mat', mdict=Settings['ANAng'])
+elif Settings["ModeName"] == 'mapping':
+    # Times of the 'for loop'
+    Settings["nn"] = len(Settings["APos"]["Cart"][1])
+    # Coordinate Transformation
+    Settings["APos"]["Sph"] = C2S(Settings["APos"]["Cart"])
+    # Radial Functions
+    rhoD = Settings["nr"][0] * Settings["k0"] * Settings["DPos"]["Sph"][0]
+    if Settings["BC"] == 'simplecavity':
+        Settings["DRad"] = SphBessel(rhoD, Settings["nmax"], 1, 'bessel')
+    else:
+        Settings["DRad"] = SphBessel(rhoD, Settings["nmax"], 1, 'hankel1')
+    # Angular Functions
+    Settings["DNAng"] = NormTauPiP(Settings["nmax"], Settings["DPos"]["Sph"][1], 'reversed')
+    # Source Coefficients
+    Settings["Source"] = SourCoeff(Settings, "Green's function only")
+    # Layer0 Coefficients
+    if Settings["BC"] == 'sphere':
+        Settings["Layer0"] = MieSingle(Settings["nr"], Settings["k0s"], Settings["nmax"])
+    # elif Settings["BC"] == 'coreshell':
+    #     Settings["Layer0"] = MieCoreShell(Settings["nr"], Settings["k0s"], Settings["nmax"])
+    # elif Settings["BC"] == 'simplecavity':
+    #     Settings["Layer0"] = MieSimCav(Settings["nr"], Settings["k0s"], Settings["nmax"])
+    # Layer1 Coefficients
+    if Settings["BC"] == 'sphere':
+        Settings["Layer1"] = MieSingle(Settings["nr"], Settings["k0s"], Settings["nmax"])
+    # elif Settings["BC"] == 'coreshell':
+    #     print("The feature of core/shell mapping is not supported yet.")
+    #     print("Overwrite the electric field of the inner region by zero.")
+    #     Settings["Layer1"]["gamma"] = 0
+    #     Settings["Layer1"]["delta"] = 0
+    # elif Settings["BC"] == 'simplecavity':
+    #     Settings["Layer1"] = MieSimCav(Settings["nr"], Settings["k0s"], Settings["nmax"])
+    
+    if Settings["BC"] == 'simplecavity':
+        Settings["Layer0"]["a"] = Settings["Source"]["r"] * (Settings["Layer0"]["alpha"]).reshape(-1, 1)
+        Settings["Layer0"]["b"] = Settings["Source"]["s"] * (Settings["Layer0"]["beta"]).reshape(-1, 1)
+        Settings["Layer1"]["d"] = Settings["Source"]["r"] * (Settings["Layer1"]["delta"]).reshape(-1, 1)
+        Settings["Layer1"]["c"] = Settings["Source"]["s"] * (Settings["Layer1"]["gamma"]).reshape(-1, 1)
+    else:
+        Settings["Layer0"]["a"] = Settings["Source"]["p"] * (Settings["Layer0"]["alpha"]).reshape(-1, 1)
+        Settings["Layer0"]["b"] = Settings["Source"]["q"] * (Settings["Layer0"]["beta"]).reshape(-1, 1)
+        Settings["Layer1"]["d"] = Settings["Source"]["p"] * (Settings["Layer1"]["delta"]).reshape(-1, 1)
+        Settings["Layer1"]["c"] = Settings["Source"]["q"] * (Settings["Layer1"]["gamma"]).reshape(-1, 1)
+
+
+
+    #sio.savemat('./main_DNAng.mat', mdict=Settings['DNAng'])
+    #sio.savemat('./main_ANAng.mat', mdict=Settings['ANAng'])
+
 
 # Radial Functions
 #rhoD = Settings['nr'][0] * Settings['k0'] * Settings['DPos']['Sph'][0]
@@ -177,6 +229,29 @@ if Settings['ModeName'] == 'wavelength':
 
         # Information
         #print(f'Progress: {((ii + 1) / Settings["nn"]) * 100:.2f}%')
+elif Settings["ModeName"] == 'mapping':
+    tmp1 = Settings["APos"]["Cart"]
+    tmp2 = Settings["APos"]["Sph"]
+    print('tmp1', tmp1.shape)
+    print('tmp2', tmp2.shape)
+    Etot = []
+    EtotSI = []
+    Edip = []
+    for ii in range(Settings["nn"]):
+        Settings["APos"]["Cart"] = tmp1[:, ii]
+        Settings["APos"]["Sph"] = tmp2[:, ii]
+        
+        if Settings["APos"]["Sph"][0] >= Settings["rbc"][0]:
+            Output = TwoGR0(Settings)
+        else:
+            Output = TwoGR1(Settings)
+        
+        Etot.append(list(map(list, zip(*Output["Etot"]))))
+        EtotSI.append(list(map(list, zip(*Output["EtotSI"]))))
+        Edip.append(list(map(list, zip(*Output["Edip"]))))
+        
+        # # Information
+        # print(f"Progress: {((ii+1)/Settings['nn'])*100:.2f}%")
 
 ############################################################################
 ############################################################################
@@ -229,6 +304,20 @@ if Settings['ModeName'] == 'wavelength':
             'J_py'   : J,
         }
         sio.savemat('./main_result.mat', mdict=Result)
+        
+elif Settings["ModeName"] == 'mapping':
+    # c = 2.9979e8
+    # const = Dpstrength * c**2 * 1e-5
+    
+    # Electric Field Intensity (Spheres)
+    EFI = np.linalg.norm(EtotSI, axis=1)**2
+    # Reshape the Array
+    EFImap = EFI.reshape(Settings["shape"])
+    
+    # Electric Field Intensity (Vacuum)
+    EFIdip = np.linalg.norm(Edip, axis=1)**2
+    # Reshape the Array
+    EFIdipmap = EFIdip.reshape(Settings["shape"])
 
 ############################################################################
 ############################################################################

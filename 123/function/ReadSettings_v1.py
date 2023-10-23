@@ -39,27 +39,7 @@ def ReadSettings(filename):
                     fplot['subrange'][i] = float('inf')
     fplot['subrange'] = np.array(fplot['subrange'])
     '''
-    # Convert list to array
-    DPos_Cart = Settings["DPos"]["Cart"]
-    #print("ReadSettings DPos_Cart : ")
-    #print(DPos_Cart)
-    #DPos_Cart_column = DPos_Cart.reshape()
-    Settings["DPos"]["Cart"] = np.array(DPos_Cart).reshape(-1, 1)
-    #print('ReadSettings type(Settings["DPos"]["Cart"]) : ')
-    #print(type(Settings["DPos"]["Cart"]))
-    #print(Settings["DPos"]["Cart"])
-    APos_Cart = Settings["APos"]["Cart"]
-    Settings["APos"]["Cart"] = np.array(APos_Cart).reshape(-1, 1)
-    #print('ReadSettings Settings["APos"]["Cart"] : ')
-    #print(Settings["APos"]["Cart"])
-    DOri_Cart = Settings["DOri"]["Cart"]
-    Settings["DOri"]["Cart"] = np.array(DOri_Cart).reshape(-1, 1)
-    #print('ReadSettings Settings["DOri"]["Cart"] : ')
-    #print(Settings["DOri"]["Cart"])
-    AOri_Cart = Settings["AOri"]["Cart"]
-    Settings["AOri"]["Cart"] = np.array(AOri_Cart).reshape(-1, 1)
-    #print('ReadSettings Settings["AOri"]["Cart"] : ')
-    #print(Settings["AOri"]["Cart"])
+
 
     # Verify the assignments of dielectric function
     if 'epsi0' in tmp_set:
@@ -137,6 +117,28 @@ def ReadSettings(filename):
             nr[:, 0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
             nr[:, 1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
             nr[:, 2] = np.sqrt(Interpolation(lambdaa, lambda2, epsi2))
+        
+        # Convert list to array
+        DPos_Cart = Settings["DPos"]["Cart"]
+        #print("ReadSettings DPos_Cart : ")
+        #print(DPos_Cart)
+        #DPos_Cart_column = DPos_Cart.reshape()
+        Settings["DPos"]["Cart"] = np.array(DPos_Cart).reshape(-1, 1)
+        #print('ReadSettings type(Settings["DPos"]["Cart"]) : ')
+        #print(type(Settings["DPos"]["Cart"]))
+        #print(Settings["DPos"]["Cart"])
+        APos_Cart = Settings["APos"]["Cart"]
+        Settings["APos"]["Cart"] = np.array(APos_Cart).reshape(-1, 1)
+        #print('ReadSettings Settings["APos"]["Cart"] : ')
+        #print(Settings["APos"]["Cart"])
+        DOri_Cart = Settings["DOri"]["Cart"]
+        Settings["DOri"]["Cart"] = np.array(DOri_Cart).reshape(-1, 1)
+        #print('ReadSettings Settings["DOri"]["Cart"] : ')
+        #print(Settings["DOri"]["Cart"])
+        AOri_Cart = Settings["AOri"]["Cart"]
+        Settings["AOri"]["Cart"] = np.array(AOri_Cart).reshape(-1, 1)
+        #print('ReadSettings Settings["AOri"]["Cart"] : ')
+        #print(Settings["AOri"]["Cart"])
 
     elif Settings['ModeName'] == 'angle':
         Theta_num = np.abs(tmp_set['Theta_f'] - tmp_set['Theta_i']) / tmp_set['ThetaResol'] + 1
@@ -163,6 +165,82 @@ def ReadSettings(filename):
             nr[0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
             nr[1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
             nr[2] = np.sqrt(Interpolation(lambdaa, lambda2, epsi2))
+
+    elif Settings["ModeName"] == 'mapping':
+        Settings["shape"] = (tmp_set["x_points"], tmp_set["y_points"])
+        
+        # Acceptor dipole
+        xgrid = np.linspace(tmp_set["x_start"], tmp_set["x_end"], tmp_set["x_points"])
+        ygrid = np.linspace(tmp_set["y_start"], tmp_set["y_end"], tmp_set["y_points"])
+        
+        if tmp_set["plane"] == 'xz':
+            Ax, Az = np.meshgrid(xgrid, ygrid)
+            Settings["plotx"] = Ax
+            Settings["ploty"] = Az
+            
+            AxReshape = Ax.ravel()
+            AyReshape = tmp_set["third_coord"] * np.ones(Ax.size)
+            AzReshape = Az.ravel()
+        elif tmp_set["plane"] == 'xy':
+            Ax, Ay = np.meshgrid(xgrid, ygrid)
+            Settings["plotx"] = Ax
+            Settings["ploty"] = Ay
+            
+            AxReshape = Ax.ravel()
+            AyReshape = Ay.ravel()
+            AzReshape = tmp_set["third_coord"] * np.ones(Ax.size)
+        elif tmp_set["plane"] == 'yz':
+            Ay, Az = np.meshgrid(xgrid, ygrid)
+            Settings["plotx"] = Ay
+            Settings["ploty"] = Az
+
+            AxReshape = tmp_set["third_coord"] * np.ones(Ay.size)
+            AyReshape = Ay.ravel()
+            AzReshape = Az.ravel()
+        
+        APos_Cart = np.array([[AxReshape], [AyReshape], [AzReshape]])
+        Settings["APos"]["Cart"] = APos_Cart
+
+        if tmp_set["lambda_i"] == tmp_set["lambda_f"]:
+            lambdaa = np.array(tmp_set["lambda_i"])
+            
+        else:
+            print("The initial wavelength isn't equal to the final wavelength.")
+
+        if Settings["BC"] == 'sphere':
+            nr = np.zeros(2)
+            nr[0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
+            nr[1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
+        elif Settings["BC"] == 'coreshell':
+            nr = np.zeros(3)
+            nr[0] = np.sqrt(Interpolation(lambdaa, lambda0, epsi0))
+            nr[1] = np.sqrt(Interpolation(lambdaa, lambda1, epsi1))
+            nr[2] = np.sqrt(Interpolation(lambdaa, lambda2, epsi2))
+            
+        # Convert list to array
+        DPos_Cart = Settings["DPos"]["Cart"]
+        #print("ReadSettings DPos_Cart : ")
+        #print(DPos_Cart)
+        #DPos_Cart_column = DPos_Cart.reshape()
+        Settings["DPos"]["Cart"] = np.array(DPos_Cart).reshape(-1, 1)
+        #print('ReadSettings type(Settings["DPos"]["Cart"]) : ')
+        #print(type(Settings["DPos"]["Cart"]))
+        #print(Settings["DPos"]["Cart"])
+        APos_Cart = Settings["APos"]["Cart"]
+        Settings["APos"]["Cart"] = np.array(APos_Cart).reshape(-1, 1)
+        #print('ReadSettings Settings["APos"]["Cart"] : ')
+        #print(Settings["APos"]["Cart"])
+        DOri_Cart = Settings["DOri"]["Cart"]
+        Settings["DOri"]["Cart"] = np.array(DOri_Cart).reshape(-1, 1)
+        #print('ReadSettings Settings["DOri"]["Cart"] : ')
+        #print(Settings["DOri"]["Cart"])
+        AOri_Cart = Settings["AOri"]["Cart"]
+        Settings["AOri"]["Cart"] = np.array(AOri_Cart).reshape(-1, 1)
+        #print('ReadSettings Settings["AOri"]["Cart"] : ')
+        #print(Settings["AOri"]["Cart"])
+
+    
+
 
     Settings['lambda'] = lambdaa
     Settings['k0']     = 2 * np.pi / lambdaa
