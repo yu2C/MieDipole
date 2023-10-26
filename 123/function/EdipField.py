@@ -18,7 +18,7 @@ def EdipField(nr, k, rdip, vdip):
     r     = rdip[0]
     theta = rdip[1]
     phi   = rdip[2]
-    print(theta)
+    #print(theta)
     # Radial Function (1j * k^3 is canceled)
     Rad1 = np.exp(1j * k * r) / r * (1 / r**2 - 1j * k / r)
     Rad2 = np.exp(1j * k * r) / r * (k**2 + 1j * k / r - 1 / r**2)

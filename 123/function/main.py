@@ -26,7 +26,7 @@ sys.path.append('./Functions/')
 
 # File to be calculated
 FilePath = './' #'./123/function/'#'./InputFiles/'  # Folder Path of Input Files
-FileName = 'Demo_MappingMode_CF_sphere'  # File Name
+FileName = 'Demo_WavelengthMode_CF_sphere'  # File Name
 
 # Output Figure Size (value = 0~1)
 Resize = 0.5

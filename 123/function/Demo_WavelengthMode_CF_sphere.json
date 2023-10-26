@@ -14,7 +14,7 @@
 	  "AOri"	   : {
 		  "Cart"   : [1, 0, 0]
 	  },
-	  "nmax"	   : 70,
+	  "nmax"	   : 79,
 	  "BC"		   : "sphere",
 	  "rbc"		   : [60e-9],
 	  "Dpstrength" : 1

@@ -110,3 +110,9 @@ print(C)
 #A = A + 1 
 # B = A + 1 
 # print(B)
+
+A = np.array([[1, -1, 0], [-1, 2, -1], [0, -1, 1]])
+#B, C = np.linalg.eig(A)
+C = np.diag(A)
+print()
+print(C)
