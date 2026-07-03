@@ -1,8 +1,7 @@
-"""Generate example figure for README from saved main_result.mat."""
+"""Generate example figure for README from main_result.mat."""
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -14,21 +13,18 @@ import numpy as np  # noqa: E402
 import scipy.io as sio  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-FUNCTION_DIR = ROOT / "123" / "function"
 DOCS_DIR = ROOT / "docs"
 
 
 def main() -> None:
-    sys.path.insert(0, str(FUNCTION_DIR))
-    os.chdir(FUNCTION_DIR)
-
+    sys.path.insert(0, str(ROOT / "Functions"))
     from ReadSettings_v1 import ReadSettings
 
-    settings = ReadSettings("Demo_WavelengthMode_CF_sphere.json")["Settings"]
-    result = sio.loadmat("main_result.mat")
+    settings = ReadSettings(str(ROOT / "InputFiles" / "Demo_WavelengthMode_CF_sphere.json"))["Settings"]
+    result = sio.loadmat(ROOT / "main_result.mat")
 
     lambda_val = np.asarray(settings["lambda"]).ravel()
-    x = 1.0 / lambda_val * 1e-2  # wavenumber (cm^-1)
+    x = 1.0 / lambda_val * 1e-2
     cf = result["CF_py"].ravel()
     cfdip = result["CFdip_py"].ravel()
 

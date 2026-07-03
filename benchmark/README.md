@@ -17,11 +17,10 @@ Files with `_py` suffix in variable names are Python snapshots from development.
 
 ## Refresh regression baseline
 
-After intentional code changes, update the end-to-end reference:
+Refresh regression baseline:
 
 ```bash
-cd 123/function
-uv run --project ../.. python main.py
-cp main_result.mat ../../benchmark/regression/CF_sphere_py.mat
-uv run --project ../.. pytest tests/ -v
+uv run python main.py
+cp main_result.mat benchmark/regression/CF_sphere_py.mat
+uv run pytest tests/ -v
 ```

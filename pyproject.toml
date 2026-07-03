@@ -17,5 +17,5 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["tests", "123/function"]
+pythonpath = ["tests", "Functions"]
 testpaths = ["tests"]

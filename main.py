@@ -1,8 +1,12 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "Functions"))
+
 import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
 import matplotlib.axes as x
-import sys
 import json
 #from Settings1 import Settings
 from ReadSettings_v1 import ReadSettings
@@ -21,12 +25,9 @@ from TwoGR1          import TwoGR1
 ###########################################################################
 ## Start the Program
 
-# set the temperary path
-sys.path.append('./Functions/')
-
 # File to be calculated
-FilePath = './' #'./123/function/'#'./InputFiles/'  # Folder Path of Input Files
-FileName = 'Demo_WavelengthMode_CF_sphere'  # File Name
+FilePath = './InputFiles/'
+FileName = 'Demo_WavelengthMode_CF_sphere'
 
 # Output Figure Size (value = 0~1)
 Resize = 0.5

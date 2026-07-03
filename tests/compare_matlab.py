@@ -1,4 +1,4 @@
-"""Utilities for comparing Python output against MATLAB .mat golden references."""
+"""Utilities for comparing Python output against reference .mat files."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ import scipy.io as sio
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BENCHMARK_DIR = REPO_ROOT / "benchmark"
-FUNCTION_DIR = REPO_ROOT / "123" / "function"
+FUNCTIONS_DIR = REPO_ROOT / "Functions"
+INPUT_FILES_DIR = REPO_ROOT / "InputFiles"
 
 
 def load_mat(path: Path | str) -> dict[str, Any]:
