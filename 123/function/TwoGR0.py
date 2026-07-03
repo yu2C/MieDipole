@@ -200,8 +200,8 @@ def TwoGR0(Settings):
                 #print(Settings['APos']['Sph2'])
                 #print(Settings['DOri']['Cart'])
         '''
-        print("TwoGR0 Settings['APos']['Sph2'] : ")
-        print(Settings['APos']['Sph2'].shape)
+        # print("TwoGR0 Settings['APos']['Sph2'] : ")
+        # print(Settings['APos']['Sph2'].shape)
         Settings['EdipS2'] = EdipField(Settings['nr'][0], Settings['k0'], Settings['APos']['Sph2'], Settings['DOri']['Cart'])
 
         # Transforming to the Primary Coordinate (need to be computed at each freq.)

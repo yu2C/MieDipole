@@ -1,38 +1,27 @@
-# Benchmark / Golden Reference Files
+# Benchmark Data
 
-These `.mat` files were saved during MATLAB → Python porting.  
-**Treat files without `_py` suffix in variable names as MATLAB (`main` branch) golden reference.**
+Reference `.mat` files used for **regression testing** during the MATLAB → Python port.
 
-## MATLAB golden (compare Python against these)
+## Regression reference (active)
 
-| File | Variables | Module |
-|------|-----------|--------|
-| `ReadSettings.mat` | `Settings`, `error_msg` | ReadSettings |
-| `TwoGR0_*.mat` | Layer0, Source, Temp, … | TwoGR0 |
-| `SourCoeff_*.mat` | p, q, M, N, … | SourCoeff |
-| `VectSphFunc.mat` | `M`, `N` | VectSphFunc |
-| `VectSphFunc_Rad.mat` | radial functions | SphBessel |
+| File | Purpose |
+|------|---------|
+| `regression/CF_sphere_py.mat` | End-to-end CF output for `Demo_WavelengthMode_CF_sphere.json` |
+| `ReadSettings.mat` | ReadSettings intermediate values (from original MATLAB run) |
 
-## Python snapshots (self-benchmark, not MATLAB)
+## Historical / module-level
 
-| File | Note |
-|------|------|
-| `*_pyvalues` in NormTauPiP_*.mat | Python export during dev |
-| `ReadSettings_py.mat` | Python ReadSettings snapshot |
-| `benchmark_of_*.mat` | Python module output |
+Intermediate results (`TwoGR0_*.mat`, `SourCoeff_*.mat`, `VectSphFunc.mat`, …) were saved during porting for module-by-module debugging. Useful for future test expansion.
 
-## Needs refresh
+Files with `_py` suffix in variable names are Python snapshots from development.
 
-| File | Note |
-|------|------|
-| `main_result.mat` | Contains `CF_py` keys; **does not match** current `main.py` output. Re-export from MATLAB `Main.m` when available. |
+## Refresh regression baseline
 
-### How to add MATLAB end-to-end golden
+After intentional code changes, update the end-to-end reference:
 
-In MATLAB (`main` branch), after running `Demo_WavelengthMode_CF_sphere.json`:
-
-```matlab
-save('benchmark/golden/CF_sphere.mat', 'CF', 'CFdip', 'EF', 'NormEtot');
+```bash
+cd 123/function
+uv run --project ../.. python main.py
+cp main_result.mat ../../benchmark/regression/CF_sphere_py.mat
+uv run --project ../.. pytest tests/ -v
 ```
-
-Then Python tests can compare against `CF` (no `_py` suffix).

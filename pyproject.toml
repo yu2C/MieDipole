@@ -2,7 +2,7 @@
 name = "miedipole-py"
 version = "0.1.0"
 description = "Python port of MieDipole — Generalized Mie Theory with electric dipole source"
-readme = "README_PYTHON.md"
+readme = "README.md"
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "numpy==1.26.4",

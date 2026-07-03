@@ -85,8 +85,14 @@ def test_main_cf_self_consistent(main_result_py):
         assert max_abs_diff(first[key], second[key]) == 0.0, key
 
 
-@pytest.mark.skip(reason="benchmark/main_result.mat is stale; re-export from MATLAB Main.m")
+@pytest.mark.skip(reason="benchmark/main_result.mat is legacy; use benchmark/regression/CF_sphere_py.mat")
 def test_main_cf_matches_matlab_golden(main_result_py):
     golden = load_mat(BENCHMARK_DIR / "main_result.mat")
+    for key in ("CF_py", "CFdip_py", "EF_py"):
+        compare_arrays(main_result_py[key], golden[key], name=key)
+
+
+def test_main_cf_matches_regression_baseline(main_result_py):
+    golden = load_mat(BENCHMARK_DIR / "regression" / "CF_sphere_py.mat")
     for key in ("CF_py", "CFdip_py", "EF_py"):
         compare_arrays(main_result_py[key], golden[key], name=key)
