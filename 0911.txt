@@ -1,7 +1,0 @@
-function convert
-1. S2S
-2. C2S
-3. VecTrans
-4. Wigner_d
-5. NormTauPiP
-*Note 1-3 is about changing coordinate, 4,5 is the angular basis functions

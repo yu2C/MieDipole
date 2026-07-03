@@ -1,5 +1,0 @@
-#test if the value is zero
-any(a,1)
-sum column, then output row boolean
-any(a,2)
-sum row, then output vector boolean
