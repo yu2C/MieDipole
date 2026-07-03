@@ -1,2 +1,7 @@
-
 *.pptx
+__pycache__/
+*.pyc
+.venv/
+.uv/
+*.egg-info/
+.ipynb_checkpoints/
