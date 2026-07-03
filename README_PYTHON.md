@@ -22,6 +22,14 @@ cd 123/function
 uv run --project ../.. python main.py
 ```
 
+## Verify against MATLAB golden
+
+```bash
+uv run pytest tests/ -v
+```
+
+Compares Python output with `.mat` files in `benchmark/` (saved from MATLAB during porting). See `benchmark/README.md` for file classification.
+
 Default input: `Demo_WavelengthMode_CF_sphere.json` (in the same directory).
 
 ## Directory Layout
